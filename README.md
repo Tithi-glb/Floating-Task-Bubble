@@ -135,21 +135,23 @@ Open:
 http://localhost:5173
 ```
 
----
 # 📸 Project Screenshots
 
 ## Dashboard
 
-![FloatingTask](./public/screenshots/FloatingTask.png)
+![Floating Task Dashboard](./screenshots/FloatingTask.png)
+
+---
 
 ## Add Task Panel
 
-![AddTask](./public/screenshots/AddTask.png)
+![Add Task Panel](./screenshots/AddTask.png)
+
+---
 
 ## Notifications
 
-![Notification](./public/screenshots/Notification.png)
----
+![Notification](./screenshots/Notification.png)
 
 ## 🔔 Notification System
 
