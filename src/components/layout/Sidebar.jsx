@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 
 function Sidebar({
   theme,
@@ -11,7 +11,7 @@ function Sidebar({
   setPriorityFilter,
   onAddTask,
 }) {
-  const [navDate, setNavDate] = useState(new Date("2026-07-14"));
+  const [navDate, setNavDate] = useState(() => new Date());
 
   const calendarDays = useMemo(() => {
     const year = navDate.getFullYear();
@@ -50,11 +50,12 @@ function Sidebar({
     return days;
   }, [navDate]);
 
+  const todayStr = new Date().toISOString().split("T")[0];
   const focusCount = tasks.filter((t) => !t.completed && t.isFocused && t.dueDate === selectedDate).length;
   const myTasksCount = tasks.filter((t) => !t.completed).length;
-  const priorityCount = tasks.filter((t) => !t.completed && t.dueDate === "2026-07-14").length;
+  const priorityCount = tasks.filter((t) => !t.completed && t.dueDate === todayStr).length;
   const calendarCount = tasks.filter((t) => !t.completed && t.dueDate === selectedDate).length;
-  const dashboardCount = tasks.filter((t) => !t.completed && t.dueDate === "2026-07-14").length;
+  const dashboardCount = tasks.filter((t) => !t.completed && t.dueDate === todayStr).length;
 
   const monthNames = [
     "January",
@@ -196,7 +197,7 @@ function Sidebar({
             </div>
           </div>
         )}
-
+      {activeCategory === "Calendar" && (
         <div className={`${miniCalendarBg} p-4 rounded-2xl border flex flex-col gap-3`}>
           <div className="flex items-center justify-between">
             <button
@@ -251,6 +252,7 @@ function Sidebar({
             <span className="text-[#4F7CFF] font-extrabold">{readableSelectedDate}</span>
           </div>
         </div>
+        )}
       </div>
 
       <div className={`text-center text-[10px] ${theme === "dark" ? "text-slate-400" : "text-slate-500"} font-medium pt-2 border-t ${theme === "dark" ? "border-slate-700" : "border-slate-200"} flex items-center justify-center gap-1`}>

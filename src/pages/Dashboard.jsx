@@ -8,6 +8,7 @@ import SettingsPanel from "../components/layout/SettingsPanel";
 import AddTaskModal from "../components/modals/AddTaskModal";
 
 import { showNotification } from "../utils/notification";
+import { loadTasks, saveTasks, normalizeTask } from "../utils/taskStorage";
 
 // Synthesized clean notification chime sound
 const playNotificationSound = () => {
@@ -48,10 +49,24 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
   const isDesktopMode =
     new URLSearchParams(window.location.search).get("desktop") === "true";
 
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem("bubble_tasks");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const fallbackUserProfile = (() => {
+    try {
+      const stored = localStorage.getItem("ftb_user_profile");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const userProfile = propUserProfile || fallbackUserProfile || {
+    name: "Guest User",
+    role: "Viewer",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=guest",
+    email: "guest@bubblespace.io",
+  };
+  const activeUserKey = userProfile?.id || userProfile?.email || "guest";
+
+  const [tasks, setTasks] = useState(() => loadTasks(userProfile));
 
   const [settings, setSettings] = useState(() => {
     try {
@@ -59,11 +74,11 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
       return saved
         ? JSON.parse(saved)
         : {
-            theme: "light",
-            notificationsEnabled: true,
-            autoOpenNewTask: false,
-            defaultPriority: "Medium",
-          };
+          theme: "light",
+          notificationsEnabled: true,
+          autoOpenNewTask: false,
+          defaultPriority: "Medium",
+        };
     } catch {
       return {
         theme: "light",
@@ -81,16 +96,23 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
 
   // Required states
   const [activeCategory, setActiveCategory] = useState("Dashboard");
-  const [selectedDate, setSelectedDate] = useState("2026-07-14");
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [priorityFilter, setPriorityFilter] = useState("all");
 
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    if (!propUserProfile && !fallbackUserProfile) {
+      navigate("/", { replace: true });
+      return;
+    }
+
+    // Load the task list from the current user's storage key.
+    // setTasks(loadTasks(userProfile));
+  }, [navigate, propUserProfile, fallbackUserProfile, userProfile?.id, userProfile?.email]);
 
   useEffect(() => {
-    localStorage.setItem("bubble_tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    // Save the task list back to the same per-user storage key for later retrieval.
+    saveTasks(tasks, userProfile);
+  }, [tasks, userProfile?.id, userProfile?.email]);
 
   useEffect(() => {
     localStorage.setItem("bubble_settings", JSON.stringify(settings));
@@ -114,25 +136,10 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
 
   // Notifications state
   const [notifications, setNotifications] = useState([]);
- 
+
 
   // Track task IDs that we have already sent notifications for
   const notifiedTasksRef = useRef(new Set());
-
-  // Load user profile from prop, fallback to localStorage, then default guest info
-  const userProfile = propUserProfile || (() => {
-    try {
-      const stored = localStorage.getItem("ftb_user_profile");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  })() || {
-    name: "Alex",
-    role: "Developer",
-    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=alex",
-    email: "alex@bubblespace.io",
-  };
 
   // Ask for permission for desktop notifications on load
   useEffect(() => {
@@ -140,62 +147,62 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
       Notification.requestPermission();
     }
   }, []);
-useEffect(() => {
-  if (!settings.notificationsEnabled) {
-    return;
-  }
+  useEffect(() => {
+    if (!settings.notificationsEnabled) {
+      return;
+    }
 
-  if ("Notification" in window) {
-    Notification.requestPermission();
-  }
+    if ("Notification" in window) {
+      Notification.requestPermission();
+    }
 
-  const checkDeadlines = () => {
-    const now = new Date();
+    const checkDeadlines = () => {
+      const now = new Date();
 
-    tasks.forEach((task) => {
-      if (task.completed) return;
+      tasks.forEach((task) => {
+        if (task.completed) return;
 
-      const deadline = new Date(
-        `${task.dueDate}T${task.time}:00`
-      );
+        const deadline = new Date(
+          `${task.dueDate}T${task.time}:00`
+        );
 
-      const diff = deadline - now;
+        const diff = deadline - now;
 
-      const oneHour = 60 * 60 * 1000;
+        const oneHour = 60 * 60 * 1000;
 
-      if (
-        diff > 0 &&
-        diff <= oneHour &&
-        !notifiedTasksRef.current.has(task.id)
-      ) {
-        notifiedTasksRef.current.add(task.id);
+        if (
+          diff > 0 &&
+          diff <= oneHour &&
+          !notifiedTasksRef.current.has(task.id)
+        ) {
+          notifiedTasksRef.current.add(task.id);
 
-        playNotificationSound();
+          playNotificationSound();
 
-        setNotifications((prev) => [
-          {
-            id: Date.now(),
-            text: `⏳ ${task.title} is due in less than 1 hour`,
-            time: new Date().toLocaleTimeString(),
-            read: false,
-          },
-          ...prev,
-        ]);
+          setNotifications((prev) => [
+            {
+              id: Date.now(),
+              text: `⏳ ${task.title} is due in less than 1 hour`,
+              time: new Date().toLocaleTimeString(),
+              read: false,
+            },
+            ...prev,
+          ]);
 
-        showNotification(task);
-      }
-    });
-  };
+          showNotification(task);
+        }
+      });
+    };
 
-  checkDeadlines();
+    checkDeadlines();
 
-  const interval = setInterval(
-    checkDeadlines,
-    60000
-  );
+    const interval = setInterval(
+      checkDeadlines,
+      60000
+    );
 
-  return () => clearInterval(interval);
-}, [tasks, settings.notificationsEnabled]);
+    return () => clearInterval(interval);
+  }, [tasks, settings.notificationsEnabled]);
   // Monitor deadlines every 10 seconds
   useEffect(() => {
     const checkDeadlines = () => {
@@ -273,25 +280,25 @@ useEffect(() => {
     setEditingTask(null);
   };
 
- const deleteTask = (taskId) => {
-  const deletedTask = tasks.find((t) => t.id === taskId);
+  const deleteTask = (taskId) => {
+    const deletedTask = tasks.find((t) => t.id === taskId);
 
-  setTasks((prev) =>
-    prev.filter((t) => t.id !== taskId)
-  );
-
-  if (deletedTask) {
-    setNotifications((prev) =>
-      prev.filter(
-        (n) => !n.text.includes(deletedTask.title)
-      )
+    setTasks((prev) =>
+      prev.filter((t) => t.id !== taskId)
     );
-  }
 
-  notifiedTasksRef.current.delete(taskId);
-};
+    if (deletedTask) {
+      setNotifications((prev) =>
+        prev.filter(
+          (n) => !n.text.includes(deletedTask.title)
+        )
+      );
+    }
 
-  const toggleComplete = (taskId) => {
+    notifiedTasksRef.current.delete(taskId);
+  };
+
+  const toggleTaskCompletion = (taskId) => {
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, completed: !t.completed } : t))
     );
@@ -333,7 +340,7 @@ useEffect(() => {
       // Shows today's tasks
       const today = new Date().toISOString().split("T")[0];
 
-return t.dueDate === today;
+      return t.dueDate === today;
     }
 
     if (activeCategory === "Calendar") {
@@ -353,7 +360,7 @@ return t.dueDate === today;
 
     if (activeCategory === "Priority Queue") {
       // The Priority Queue should show only today's tasks
-      const isToday = t.dueDate === "2026-07-14";
+      const isToday = t.dueDate === new Date().toISOString().split("T")[0];
       if (!isToday) return false;
 
       if (priorityFilter !== "all") {
@@ -372,8 +379,7 @@ return t.dueDate === today;
   return (
     <div
       className={
-        `h-screen w-screen flex flex-col font-sans select-none overflow-hidden ${
-          isDesktopMode ? "bg-transparent text-[#0F172A]" : appBackgroundClass
+        `h-screen w-screen flex flex-col font-sans select-none overflow-hidden ${isDesktopMode ? "bg-transparent text-[#0F172A]" : appBackgroundClass
         }`
       }
     >
@@ -428,7 +434,7 @@ return t.dueDate === today;
             setFocusMode={setFocusMode}
             onEdit={handleEdit}
             onDelete={deleteTask}
-            onComplete={toggleComplete}
+            onComplete={toggleTaskCompletion}
             onToggleFocus={toggleFocus}
             onAddTask={() => setIsModalOpen(true)}
           />

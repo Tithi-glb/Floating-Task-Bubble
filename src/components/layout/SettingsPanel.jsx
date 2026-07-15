@@ -22,7 +22,7 @@ function SettingsPanel({ theme, settings, onSave, userProfile, onLogout }) {
   const handleSave = () => {
     onSave(localSettings);
     setSaved(true);
-    window.setTimeout(() => setSaved(false), 2000);
+    window.setTimeout(() => setSaved(false), 10000);
   };
 
   const panelText = theme === "dark" ? "text-slate-100" : "text-slate-900";

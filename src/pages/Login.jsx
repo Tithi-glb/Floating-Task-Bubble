@@ -28,6 +28,7 @@ export default function Login({ onLogin, onRegister }) {
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError]       = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading]   = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
@@ -45,6 +46,7 @@ export default function Login({ onLogin, onRegister }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage("");
 
     if (isSignUp) {
       if (!name.trim())     { setError("Please enter your name."); return; }
@@ -57,18 +59,20 @@ export default function Login({ onLogin, onRegister }) {
       const res = onRegister(name.trim(), email.trim(), password);
       setLoading(false);
 
-     if (res.success) {
+      if (res.success) {
+        if (remember) {
+          localStorage.setItem("rememberEmail", email);
+          localStorage.setItem("rememberPassword", password);
+        } else {
+          localStorage.removeItem("rememberEmail");
+          localStorage.removeItem("rememberPassword");
+        }
 
-  if (remember) {
-    localStorage.setItem("rememberEmail", email);
-    localStorage.setItem("rememberPassword", password);
-  } else {
-    localStorage.removeItem("rememberEmail");
-    localStorage.removeItem("rememberPassword");
-  }
-
-  navigate("/dashboard");
-} else {
+        setName("");
+        setPassword("");
+        setIsSignUp(false);
+        setSuccessMessage("Account created successfully. Please log in.");
+      } else {
         setError(res.error || "Failed to register. Please try again.");
       }
     } else {
@@ -92,6 +96,7 @@ export default function Login({ onLogin, onRegister }) {
     e.preventDefault();
     setIsSignUp(!isSignUp);
     setError("");
+    setSuccessMessage("");
     setName("");
     setEmail("");
     setPassword("");
@@ -476,6 +481,15 @@ export default function Login({ onLogin, onRegister }) {
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
                 {error}
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="lp-success" role="status">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+                {successMessage}
               </div>
             )}
 

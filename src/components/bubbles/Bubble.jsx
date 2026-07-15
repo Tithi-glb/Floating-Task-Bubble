@@ -160,9 +160,9 @@ transition={{
             ]
           } : { y: [0, -10, 0] }}
           transition={isUrgent ? {
-            y: { duration: 3.5 + (task.id % 2) * 0.8, repeat: Infinity, ease: "easeInOut" },
+            y: { duration: 3.5 + (parseInt(task.id, 10) % 2 || 0) * 0.8, repeat: Infinity, ease: "easeInOut" },
             boxShadow: { duration: 0.5, repeat: Infinity, ease: "easeInOut" }
-          } : { duration: 3.5 + (task.id % 2) * 0.8, repeat: Infinity, ease: "easeInOut" }}
+          } : { duration: 3.5 + (parseInt(task.id, 10) % 2 || 0) * 0.8, repeat: Infinity, ease: "easeInOut" }}
           style={{
             width: px,
             height: px,

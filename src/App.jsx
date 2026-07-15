@@ -1,39 +1,38 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import { login, register } from "./utils/auth";
+import { getStoredUserSession, login, logoutUser, register } from "./utils/auth";
+
+function ProtectedRoute({ userProfile, onLogout, children }) {
+  const location = useLocation();
+
+  if (!userProfile) {
+    return <Navigate to="/" replace state={{ from: location }} />;
+  }
+
+  return children;
+}
 
 function App() {
-  const [userProfile, setUserProfile] = useState(() => {
-    try {
-      const stored = localStorage.getItem("ftb_user_profile");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [userProfile, setUserProfile] = useState(() => getStoredUserSession());
 
   const handleLogin = (email, password) => {
-    const user = login(email, password);
-    if (user) {
-      setUserProfile(user);
+    const res = login(email, password);
+    if (res.success) {
+      setUserProfile(res.user);
       return { success: true };
     }
-    return { success: false, error: "Incorrect email or password." };
+    return { success: false, error: res.error };
   };
 
   const handleRegister = (name, email, password) => {
-    const res = register(name, email, password);
-    if (res.success) {
-      setUserProfile(res.user);
-    }
-    return res;
+    return register(name, email, password);
   };
 
   const handleLogout = () => {
+    logoutUser();
     setUserProfile(null);
-    localStorage.removeItem("ftb_user_profile");
   };
 
   return (
@@ -45,7 +44,11 @@ function App() {
         />
         <Route
           path="/dashboard"
-          element={<Dashboard userProfile={userProfile} onLogout={handleLogout} />}
+          element={
+            <ProtectedRoute userProfile={userProfile} onLogout={handleLogout}>
+              <Dashboard userProfile={userProfile} onLogout={handleLogout} />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </BrowserRouter>
