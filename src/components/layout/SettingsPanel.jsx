@@ -77,13 +77,12 @@ function SettingsPanel({ theme, settings, onSave, userProfile, onLogout }) {
                       key={option.value}
                       type="button"
                       onClick={() => updateLocalSettings({ theme: option.value })}
-                      className={`rounded-3xl border p-4 text-left transition-all ${
-                        isActive
-                          ? "border-[#4F7CFF] bg-slate-800 text-slate-100 shadow-sm"
-                          : theme === "dark"
+                      className={`rounded-3xl border p-4 text-left transition-all ${isActive
+                        ? "border-[#4F7CFF] bg-slate-800 text-slate-100 shadow-sm"
+                        : theme === "dark"
                           ? "border-slate-700 bg-slate-900/80 hover:border-slate-600"
                           : "border-slate-200 bg-slate-50 hover:border-slate-300"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <span className={`text-base font-semibold ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>{option.label}</span>
@@ -118,19 +117,21 @@ function SettingsPanel({ theme, settings, onSave, userProfile, onLogout }) {
                   </div>
                 </label>
 
-                <label className={`flex flex-col gap-2 rounded-3xl border px-4 py-4 ${theme === "dark" ? "border-slate-700 bg-slate-900/80" : "border-slate-200 bg-slate-50"}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className={`font-semibold ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>Auto open new task modal</p>
-                      <p className={`text-sm ${secondaryText}`}>Prompt you to create a task after app load.</p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={localSettings.autoOpenNewTask}
-                      onChange={(e) => updateLocalSettings({ autoOpenNewTask: e.target.checked })}
-                      className="h-4 w-4 rounded border-slate-300 text-[#4F7CFF] focus:ring-[#4F7CFF]"
-                    />
+                <label className={`flex items-center gap-3 rounded-3xl border px-4 py-4 ${theme === "dark" ? "border-slate-700 bg-slate-900/80" : "border-slate-200 bg-slate-50"}`}>
+
+                  <input
+                    type="checkbox"
+                    checked={localSettings.autoOpenNewTask}
+                    onChange={(e) => updateLocalSettings({ autoOpenNewTask: e.target.checked })}
+                    className="h-4 w-4 rounded border-slate-300 text-[#4F7CFF] focus:ring-[#4F7CFF]"
+                  />
+                  {/* <div className="flex items-center justify-between gap-3"> */}
+                  <div>
+                    <p className={`font-semibold ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>Auto open new task modal</p>
+                    <p className={`text-sm ${secondaryText}`}>Prompt you to create a task after app load.</p>
                   </div>
+
+                  {/* </div> */}
                 </label>
               </div>
             </section>
@@ -153,15 +154,14 @@ function SettingsPanel({ theme, settings, onSave, userProfile, onLogout }) {
                     key={option.value}
                     type="button"
                     onClick={() => updateLocalSettings({ defaultPriority: option.value })}
-                    className={`rounded-3xl border px-4 py-3 text-left transition-all ${
-                      localSettings.defaultPriority === option.value
-                        ? theme === "dark"
-                          ? "border-[#4F7CFF] bg-slate-800 text-slate-100 shadow-sm"
-                          : "border-[#4F7CFF] bg-[#EFF6FF] shadow-sm"
-                        : theme === "dark"
+                    className={`rounded-3xl border px-4 py-3 text-left transition-all ${localSettings.defaultPriority === option.value
+                      ? theme === "dark"
+                        ? "border-[#4F7CFF] bg-slate-800 text-slate-100 shadow-sm"
+                        : "border-[#4F7CFF] bg-[#EFF6FF] shadow-sm"
+                      : theme === "dark"
                         ? "border-slate-700 bg-slate-900/80 text-slate-100 hover:border-slate-600"
                         : "border-slate-200 bg-slate-50 hover:border-slate-300"
-                    }`}
+                      }`}
                   >
                     <p className={`font-semibold ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>{option.label}</p>
                     <p className={`mt-1 text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>Use this priority for newly created tasks.</p>
@@ -191,11 +191,10 @@ function SettingsPanel({ theme, settings, onSave, userProfile, onLogout }) {
                 <button
                   type="button"
                   onClick={onLogout}
-                  className={`w-full mt-3 inline-flex items-center justify-center rounded-2xl px-4 py-3 font-semibold transition ${
-                    theme === "dark"
-                      ? "bg-slate-800 text-slate-100 border border-slate-700 hover:bg-slate-700"
-                      : "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50"
-                  }`}
+                  className={`w-full mt-3 inline-flex items-center justify-center rounded-2xl px-4 py-3 font-semibold transition ${theme === "dark"
+                    ? "bg-slate-800 text-slate-100 border border-slate-700 hover:bg-slate-700"
+                    : "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50"
+                    }`}
                 >
                   Log out
                 </button>

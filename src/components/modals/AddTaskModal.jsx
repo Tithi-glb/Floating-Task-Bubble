@@ -2,6 +2,7 @@ import { useState } from "react";
 
 function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Medium" }) {
   const [title, setTitle] = useState(editingTask?.title || "");
+  const [theme, setTheme] = useState("light");
   const [time, setTime] = useState(editingTask?.time || "");
   const [dueDate, setDueDate] = useState(editingTask?.dueDate || new Date().toISOString().split("T")[0]);
   const [priority, setPriority] = useState(editingTask?.priority || defaultPriority);
@@ -36,25 +37,25 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
     }
 
     onCreate({
-  ...(editingTask && { id: editingTask.id }),
+      ...(editingTask && { id: editingTask.id }),
 
-  title: title.trim(),
+      title: title.trim(),
 
-  time: time || "09:00",
+      time: time || "09:00",
 
-  dueDate:
-    dueDate || new Date().toISOString().split("T")[0],
+      dueDate:
+        dueDate || new Date().toISOString().split("T")[0],
 
-  priority,
+      priority,
 
-  isFocused,
+      isFocused,
 
-  completed: editingTask?.completed || false,
+      completed: editingTask?.completed || false,
 
-  subtasks,
+      subtasks,
 
-  color: editingTask?.color || "#60A5FA",
-});
+      color: editingTask?.color || "#60A5FA",
+    });
   };
 
   return (
@@ -95,6 +96,7 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Time</label>
               <input
                 type="time"
+                min={dueDate === new Date().toISOString().split("T")[0] ? `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}` : undefined}
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 className="w-full p-3 rounded-xl bg-white/60 border border-slate-200 text-slate-800 focus:outline-none focus:border-[#4F7CFF] focus:ring-2 focus:ring-[#4F7CFF]/20 transition"
@@ -105,8 +107,9 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Due Date</label>
               <input
                 type="date"
+                min={new Date().toISOString().split("T")[0]}
                 value={dueDate}
-onChange={(e) => setDueDate(e.target.value)}
+                onChange={(e) => setDueDate(e.target.value)}
                 className="w-full p-3 rounded-xl bg-white/60 border border-slate-200 text-slate-800 focus:outline-none focus:border-[#4F7CFF] focus:ring-2 focus:ring-[#4F7CFF]/20 transition"
               />
             </div>
@@ -126,11 +129,10 @@ onChange={(e) => setDueDate(e.target.value)}
                     key={p.name}
                     type="button"
                     onClick={() => setPriority(p.name)}
-                    className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
-                      isSel
+                    className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${isSel
                         ? "bg-slate-800 text-white border-slate-800 shadow-sm"
                         : `bg-white/60 text-slate-600 border-slate-200 ${p.color}`
-                    }`}
+                      }`}
                   >
                     {p.label}
                   </button>
@@ -200,11 +202,10 @@ onChange={(e) => setDueDate(e.target.value)}
             <button
               type="button"
               onClick={() => setIsFocused(!isFocused)}
-              className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all cursor-pointer ${
-                isFocused
+              className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all cursor-pointer ${isFocused
                   ? "bg-amber-50 border-amber-300 text-amber-500 scale-105"
                   : "bg-white border-slate-200 text-slate-400 hover:bg-slate-50"
-              }`}
+                }`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

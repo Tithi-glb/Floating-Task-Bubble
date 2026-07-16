@@ -2,6 +2,7 @@ import { useState } from "react";
 
 function Navbar({
   theme,
+  setTheme,
   searchQuery,
   setSearchQuery,
   userProfile,
@@ -37,11 +38,10 @@ function Navbar({
   };
 
   return (
-    <div className={`h-16 border-b flex items-center justify-between px-6 backdrop-blur-xl z-30 shrink-0 shadow-sm relative ${
-      theme === "dark"
-        ? "bg-slate-900/95 text-slate-100 border-slate-700"
-        : "bg-white/35 text-slate-800 border-white/40"
-    }`}>
+    <div className={`h-16 border-b flex items-center justify-between px-6 backdrop-blur-xl z-30 shrink-0 shadow-sm relative ${theme === "dark"
+      ? "bg-slate-900/95 text-slate-100 border-slate-700"
+      : "bg-white/35 text-slate-800 border-white/40"
+      }`}>
       {/* Brand Logo */}
       <div className="flex items-center gap-2">
         <span className="text-3xl filter drop-shadow-sm">🫧</span>
@@ -73,11 +73,10 @@ function Navbar({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search task bubbles..."
-          className={`w-full pl-9 pr-4 py-2 text-sm rounded-xl border focus:outline-none focus:border-[#4F7CFF] focus:ring-1 focus:ring-[#4F7CFF]/20 transition-all duration-200 shadow-inner ${
-            theme === "dark"
-              ? "bg-slate-800/70 border-slate-700 text-slate-100 placeholder-slate-400 focus:bg-slate-900"
-              : "bg-white/40 border-white/50 text-slate-800 placeholder-slate-400 focus:bg-white/70"
-          }`}
+          className={`w-full pl-9 pr-4 py-2 text-sm rounded-xl border focus:outline-none focus:border-[#4F7CFF] focus:ring-1 focus:ring-[#4F7CFF]/20 transition-all duration-200 shadow-inner ${theme === "dark"
+            ? "bg-slate-800/70 border-slate-700 text-slate-100 placeholder-slate-400 focus:bg-slate-900"
+            : "bg-white/40 border-white/50 text-slate-800 placeholder-slate-400 focus:bg-white/70"
+            }`}
         />
       </div>
 
@@ -86,11 +85,10 @@ function Navbar({
         {/* Focus Mode Button */}
         <button
           onClick={() => setFocusMode(!focusMode)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-medium text-xs transition cursor-pointer ${
-            theme === "dark"
-              ? "bg-slate-800/70 border border-slate-700 text-slate-100 hover:bg-slate-700 hover:text-white"
-              : "bg-white/50 border border-white/60 text-slate-600 hover:bg-[#EEF4FF] hover:border-[#4F7CFF]/50 hover:text-[#4F7CFF]"
-          }`}
+          className={`bubble-btn ${theme === "dark"
+            ? "bg-slate-800/70 border border-slate-700 text-slate-100 hover:bg-slate-700 hover:text-white"
+            : "bg-white/50 border border-white/60 text-slate-600 hover:bg-[#EEF4FF] hover:border-[#4F7CFF]/50 hover:text-[#4F7CFF]"
+            }`}
           title="Toggle Focus Mode"
         >
           <span>🎯</span>
@@ -100,15 +98,14 @@ function Navbar({
         {/* Settings Button */}
         <button
           onClick={() => setActiveCategory("Settings")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition cursor-pointer ${
-            activeCategory === "Settings"
-              ? theme === "dark"
-                ? "bg-slate-800 border-slate-600 text-slate-100"
-                : "bg-[#EEF4FF] border-[#4F7CFF] text-[#4F7CFF]"
-              : theme === "dark"
+          className={`bubble-btn ${activeCategory === "Settings"
+            ? theme === "dark"
+              ? "bg-slate-800 border-slate-600 text-slate-100"
+              : "bg-[#EEF4FF] border-[#4F7CFF] text-[#4F7CFF]"
+            : theme === "dark"
               ? "bg-slate-800/70 border-slate-700 text-slate-100 hover:bg-slate-700 hover:border-slate-600 hover:text-white"
               : "bg-white/50 border-white/60 hover:bg-[#EEF4FF] hover:border-[#4F7CFF]/50 hover:text-[#4F7CFF]"
-          }`}
+            }`}
           title="Open Settings"
         >
           <span>⚙️</span>
@@ -117,24 +114,32 @@ function Navbar({
 
         <button
           onClick={onLogout}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition cursor-pointer ${
-            theme === "dark"
-              ? "bg-slate-800/70 border-slate-700 text-slate-100 hover:bg-slate-700 hover:text-white"
-              : "bg-white/50 border-white/60 hover:bg-[#f8fafc] hover:border-slate-300 hover:text-slate-700"
-          }`}
+          className={`bubble-btn ${theme === "dark"
+            ? "bg-slate-800/70 border-slate-700 text-slate-100 hover:bg-slate-700 hover:text-white"
+            : "bg-white/50 border-white/60 hover:bg-[#f8fafc] hover:border-slate-300 hover:text-slate-700"
+            }`}
           title="Log out"
         >
           <span>🔓</span>
           <span className="hidden sm:inline">Logout</span>
+        </button>
+        <button
+          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          className={`bubble-btn ${theme === "dark"
+              ? "bubble-btn-dark"
+              : "bubble-btn-light"
+            }`}
+          title="Toggle Theme"
+        >
+          <span>{theme === "dark" ? "☀️" : "🌙"}</span>
         </button>
 
         {/* Notifications Icon with Dropdown */}
         <div className="relative">
           <div
             onClick={handleToggleNotif}
-            className={`relative cursor-pointer p-2 rounded-xl transition flex items-center justify-center ${
-              theme === "dark" ? "bg-slate-800/60 hover:bg-slate-700/80" : "hover:bg-white/50"
-            }`}
+            className={`relative cursor-pointer p-2 rounded-xl transition flex items-center justify-center ${theme === "dark" ? "bg-slate-800/60 hover:bg-slate-700/80" : "hover:bg-white/50"
+              }`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -159,14 +164,12 @@ function Navbar({
 
           {/* Premium Notifications Dropdown */}
           {showNotifDropdown && (
-            <div className={`absolute right-0 mt-3 w-80 backdrop-blur-2xl rounded-2xl shadow-2xl p-4 z-50 animate-fadeIn ${
-              theme === "dark"
-                ? "bg-slate-950/95 border border-slate-700"
-                : "bg-white/90 border border-slate-200/60"
-            }`}>
-              <div className={`flex items-center justify-between pb-2.5 mb-2 ${
-                theme === "dark" ? "border-b border-slate-700" : "border-b border-slate-100"
+            <div className={`absolute right-0 mt-3 w-80 backdrop-blur-2xl rounded-2xl shadow-2xl p-4 z-50 animate-fadeIn ${theme === "dark"
+              ? "bg-slate-950/95 border border-slate-700"
+              : "bg-white/90 border border-slate-200/60"
               }`}>
+              <div className={`flex items-center justify-between pb-2.5 mb-2 ${theme === "dark" ? "border-b border-slate-700" : "border-b border-slate-100"
+                }`}>
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-extrabold text-slate-800">Alerts</span>
                   {unreadCount > 0 && (
@@ -175,25 +178,35 @@ function Navbar({
                     </span>
                   )}
                 </div>
-                {unreadCount > 0 && (
+                <div className="flex items-center gap-3">
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllRead}
+                      className="text-[10px] font-extrabold text-[#4F7CFF] hover:underline cursor-pointer"
+                    >
+                      Mark all read
+                    </button>
+                  )}
                   <button
-                    onClick={handleMarkAllRead}
-                    className="text-[10px] font-extrabold text-[#4F7CFF] hover:underline cursor-pointer"
+                    onClick={() => setShowNotifDropdown(false)}
+                    className="p-1 rounded-full hover:bg-slate-100/50 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                    title="Close Alerts"
                   >
-                    Mark all read
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
-                )}
+                </div>
               </div>
 
               <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
                 {notifications.map((notif) => (
                   <div
                     key={notif.id}
-                    className={`p-2.5 rounded-xl border transition-all text-xs flex flex-col gap-1 ${
-                      notif.read
-                        ? "bg-slate-50/50 border-slate-100 text-slate-500"
-                        : "bg-red-50/60 border-red-100 text-red-700 font-medium"
-                    }`}
+                    className={`p-2.5 rounded-xl border transition-all text-xs flex flex-col gap-1 ${notif.read
+                      ? "bg-slate-50/50 border-slate-100 text-slate-500"
+                      : "bg-red-50/60 border-red-100 text-red-700 font-medium"
+                      }`}
                   >
                     <div className="flex justify-between items-start gap-1">
                       <span className="leading-tight">{notif.text}</span>
@@ -217,7 +230,7 @@ function Navbar({
         <div className={`h-6 w-px ${theme === "dark" ? "bg-slate-700" : "bg-slate-200"}`} />
 
         {/* User Info Details & Avatar */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="text-right hidden md:block">
             <h2 className={`text-xs font-semibold leading-tight ${theme === "dark" ? "text-slate-100" : "text-slate-800"}`}>
               {profile.name}

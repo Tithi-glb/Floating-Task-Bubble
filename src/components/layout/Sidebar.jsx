@@ -97,6 +97,7 @@ function Sidebar({
     { name: "Focus Tasks", icon: "⭐", badge: focusCount },
     { name: "My Tasks", icon: "🫧", badge: myTasksCount },
     { name: "Priority Queue", icon: "⚡", badge: priorityCount },
+    { name: "Progress Tracker", icon: "📈", badge: null },
     { name: "Settings", icon: "⚙️", badge: null },
   ];
 

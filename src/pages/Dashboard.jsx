@@ -6,6 +6,7 @@ import Sidebar from "../components/layout/Sidebar";
 import PreviewPanel from "../components/layout/PreviewPanel";
 import SettingsPanel from "../components/layout/SettingsPanel";
 import AddTaskModal from "../components/modals/AddTaskModal";
+import ProgressTracker from "../components/layout/ProgressTracker";
 
 import { showNotification } from "../utils/notification";
 import { loadTasks, saveTasks, normalizeTask } from "../utils/taskStorage";
@@ -381,11 +382,18 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
       className={
         `h-screen w-screen flex flex-col font-sans select-none overflow-hidden ${isDesktopMode ? "bg-transparent text-[#0F172A]" : appBackgroundClass
         }`
+
       }
     >
       {!focusMode && !isDesktopMode && (
         <Navbar
           theme={settings.theme}
+          setTheme={(newTheme) =>
+            setSettings((prev) => ({
+              ...prev,
+              theme: newTheme,
+            }))
+          }
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           userProfile={userProfile}
@@ -422,6 +430,8 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
             userProfile={userProfile}
             onLogout={handleLogout}
           />
+        ) : activeCategory === "Progress Tracker" ? (
+          <ProgressTracker tasks={tasks} theme={settings.theme} />
         ) : (
           <PreviewPanel
             theme={settings.theme}
