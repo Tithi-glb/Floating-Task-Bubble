@@ -1,4 +1,6 @@
+import { useState } from "react";
 import Bubble from "../bubbles/Bubble";
+import ProgressTracker from "../layout/ProgressTracker";
 
 const positions = [
   { top: "10%", left: "10%" },
@@ -26,6 +28,10 @@ function PreviewPanel({
   onAddTask,
   onOpenProgress,
 }) {
+  // Independent tooltip and progress tracker active states
+  const [activeTooltipTask, setActiveTooltipTask] = useState(null);
+  const [activeProgressTask, setActiveProgressTask] = useState(null);
+
   return (
     <div
       className={`
@@ -127,9 +133,32 @@ function PreviewPanel({
             onToggleFocus={onToggleFocus}
             onUpdateTask={onUpdateTask}
             onOpenProgress={onOpenProgress}
+            activeTooltipTask={activeTooltipTask}
+            setActiveTooltipTask={setActiveTooltipTask}
+            activeProgressTask={activeProgressTask}
+            setActiveProgressTask={setActiveProgressTask}
           />
         </div>
       ))}
+
+      {/* Independent Progress Tracker Panel Modal */}
+      {activeProgressTask && (
+        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-6">
+          <div
+            className="w-full max-w-[900px] h-[85%] rounded-[30px] shadow-2xl overflow-hidden border border-white/20 relative"
+            style={{
+              background: theme === "dark" ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(24px)",
+            }}
+          >
+            <ProgressTracker
+              tasks={tasks}
+              theme={theme}
+              onClose={() => setActiveProgressTask(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

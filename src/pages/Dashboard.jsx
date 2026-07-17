@@ -263,39 +263,52 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
           />
         )}
 
-        {activeCategory === "Settings" ? (
-          <SettingsPanel
-            theme={settings.theme}
-            settings={settings}
-            onSave={handleSaveSettings}
-            userProfile={userProfile}
-            onLogout={handleLogout}
-          />
-        ) : activeCategory === "Progress Tracker" ? (
-          <ProgressTracker
+        <div className="flex-grow flex flex-col relative overflow-hidden h-full">
+          {activeCategory === "Settings" ? (
+            <SettingsPanel
+              theme={settings.theme}
+              settings={settings}
+              onSave={handleSaveSettings}
+              userProfile={userProfile}
+              onLogout={handleLogout}
+            />
+          ) : activeCategory === "Progress Tracker" ? (
+            <ProgressTracker
+              tasks={tasks}
+              theme={settings.theme}
+              onClose={() => setActiveCategory("Dashboard")}
+            />
+          ) : (
+            <PreviewPanel
+              theme={settings.theme}
+              tasks={filteredTasks}
+              isDesktopMode={isDesktopMode}
+              allTasks={tasks}
+              activeCategory={activeCategory}
+              isModalOpen={isModalOpen}
+              focusMode={focusMode}
+              setFocusMode={setFocusMode}
+              onEdit={handleEdit}
+              onDelete={deleteTask}
+              onComplete={toggleTaskCompletion}
+              onToggleFocus={toggleFocus}
+              onUpdateTask={updateTaskById}
+              onAddTask={() => setIsModalOpen(true)}
+              onOpenProgress={handleOpenProgress}
+            />
+          )}
+
+          {/* Floating Dock — always visible at bottom of active workspace */}
+          <FloatingDock
             tasks={tasks}
             theme={settings.theme}
-            onClose={() => setActiveCategory("Dashboard")}
-          />
-        ) : (
-          <PreviewPanel
-            theme={settings.theme}
-            tasks={filteredTasks}
-            isDesktopMode={isDesktopMode}
-            allTasks={tasks}
-            activeCategory={activeCategory}
-            isModalOpen={isModalOpen}
-            focusMode={focusMode}
-            setFocusMode={setFocusMode}
+            onAddTask={() => setIsModalOpen(true)}
+            onUpdateTask={updateTaskById}
+            onComplete={toggleTaskCompletion}
             onEdit={handleEdit}
             onDelete={deleteTask}
-            onComplete={toggleTaskCompletion}
-            onToggleFocus={toggleFocus}
-            onUpdateTask={updateTaskById}
-            onAddTask={() => setIsModalOpen(true)}
-            onOpenProgress={handleOpenProgress}
           />
-        )}
+        </div>
       </div>
 
       {/* Add Task Modal */}
@@ -307,17 +320,6 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
           defaultPriority={settings.defaultPriority}
         />
       )}
-
-      {/* Floating Dock — always visible at bottom */}
-      <FloatingDock
-        tasks={tasks}
-        theme={settings.theme}
-        onAddTask={() => setIsModalOpen(true)}
-        onUpdateTask={updateTaskById}
-        onComplete={toggleTaskCompletion}
-        onEdit={handleEdit}
-        onDelete={deleteTask}
-      />
     </div>
   );
 }

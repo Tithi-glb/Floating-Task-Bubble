@@ -106,7 +106,7 @@ export default function FloatingDock({ tasks, theme, onAddTask, onUpdateTask, on
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[998]"
+            className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[998]"
             style={{ maxWidth: "min(680px, calc(100vw - 48px))", width: "100%" }}
           >
             <div
@@ -115,7 +115,7 @@ export default function FloatingDock({ tasks, theme, onAddTask, onUpdateTask, on
                 background: isDark ? "rgba(15, 23, 42, 0.96)" : "rgba(255,255,255,0.96)",
                 backdropFilter: "blur(32px) saturate(200%)",
                 WebkitBackdropFilter: "blur(32px) saturate(200%)",
-                border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(200,215,255,0.5)",
+                border: isDark ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(200,215,255,0.5)",
                 boxShadow: "0 24px 80px rgba(0,0,0,0.25), 0 4px 24px rgba(0,0,0,0.1)",
                 maxHeight: "70vh",
                 overflowY: "auto",
@@ -156,7 +156,7 @@ export default function FloatingDock({ tasks, theme, onAddTask, onUpdateTask, on
       </AnimatePresence>
 
       {/* Dock bar */}
-      <div className="fixed bottom-5 left-0 right-0 flex justify-center z-[999] pointer-events-none">
+      <div className="absolute bottom-5 left-0 right-0 flex justify-center z-[999] pointer-events-none">
         <motion.div
           ref={dockRef}
           initial={{ y: 80, opacity: 0 }}
