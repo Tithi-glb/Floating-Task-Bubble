@@ -23,11 +23,12 @@ export function normalizeTask(task = {}, defaults = {}) {
     completed: Boolean(safeTask.completed),
     subtasks: Array.isArray(safeTask.subtasks) ? safeTask.subtasks : [],
     createdAt,
+    updatedAt: safeTask.updatedAt || createdAt,
     dueDate: safeTask.dueDate || dateValue,
     isFocused: Boolean(safeTask.isFocused),
     color: safeTask.color || "#60A5FA",
     ...safeTask,
-    
+
   };
 }
 

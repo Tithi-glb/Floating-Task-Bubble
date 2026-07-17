@@ -109,7 +109,7 @@ function Navbar({
           title="Open Settings"
         >
           <span>⚙️</span>
-          <span className="hidden sm:inline">Settings</span>
+          {/* <span className="hidden sm:inline">Settings</span> */}
         </button>
 
         <button
@@ -126,8 +126,8 @@ function Navbar({
         <button
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           className={`bubble-btn ${theme === "dark"
-              ? "bubble-btn-dark"
-              : "bubble-btn-light"
+            ? "bubble-btn-dark"
+            : "bubble-btn-light"
             }`}
           title="Toggle Theme"
         >
