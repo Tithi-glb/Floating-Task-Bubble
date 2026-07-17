@@ -2,6 +2,7 @@ import { useState } from "react";
 
 function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Medium" }) {
   const [title, setTitle] = useState(editingTask?.title || "");
+  const [description, setDescription] = useState(editingTask?.description || "");
   const [theme, setTheme] = useState("light");
   const [time, setTime] = useState(editingTask?.time || "");
   const [dueDate, setDueDate] = useState(editingTask?.dueDate || new Date().toISOString().split("T")[0]);
@@ -9,6 +10,8 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
   const [isFocused, setIsFocused] = useState(editingTask?.isFocused || false);
   const [subtasks, setSubtasks] = useState(editingTask?.subtasks || []);
   const [newSubtaskText, setNewSubtaskText] = useState("");
+  const TITLE_MAX = 50;
+  const DESCRIPTION_MAX = 250;
 
   const handleAddSubtask = (e) => {
     e.preventDefault();
@@ -30,31 +33,55 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
     setSubtasks((prev) => prev.filter((s) => s.id !== id));
   };
 
+  const getSmartDateTime = () => {
+    const now = new Date();
+    const twoHoursLater = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+    const hasDate = Boolean(dueDate);
+    const hasTime = Boolean(time);
+
+    const targetDate = hasDate ? new Date(dueDate) : now;
+    const targetTime = hasTime ? time : `${String(twoHoursLater.getHours()).padStart(2, '0')}:${String(twoHoursLater.getMinutes()).padStart(2, '0')}`;
+
+    const [hours, minutes] = targetTime.split(":").map((value) => parseInt(value, 10));
+    const normalizedDate = new Date(targetDate);
+    normalizedDate.setHours(hours, minutes, 0, 0);
+
+    if (!hasTime) {
+      const nowDate = new Date(now);
+      nowDate.setHours(now.getHours(), now.getMinutes(), 0, 0);
+      const adjusted = new Date(nowDate.getTime() + 2 * 60 * 60 * 1000);
+      normalizedDate.setFullYear(adjusted.getFullYear(), adjusted.getMonth(), adjusted.getDate());
+      normalizedDate.setHours(adjusted.getHours(), adjusted.getMinutes(), 0, 0);
+    }
+
+    return {
+      dueDate: normalizedDate.toISOString().split('T')[0],
+      time: `${String(normalizedDate.getHours()).padStart(2, '0')}:${String(normalizedDate.getMinutes()).padStart(2, '0')}`,
+    };
+  };
+
   const handleSubmit = () => {
     if (!title.trim()) {
       alert("Please enter a task title");
       return;
     }
 
+    const smartDateTime = getSmartDateTime();
+
     onCreate({
       ...(editingTask && { id: editingTask.id }),
 
       title: title.trim(),
-
-      time: time || "09:00",
-
-      dueDate:
-        dueDate || new Date().toISOString().split("T")[0],
-
+      description: description.trim(),
+      time: smartDateTime.time,
+      dueDate: smartDateTime.dueDate,
       priority,
-
       isFocused,
-
       completed: editingTask?.completed || false,
-
       subtasks,
-
       color: editingTask?.color || "#60A5FA",
+      ...(editingTask ? { updatedAt: new Date().toISOString() } : { createdAt: new Date().toISOString() }),
     });
   };
 
@@ -81,13 +108,36 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
         {/* Form */}
         <div className="space-y-4 flex-1">
           <div>
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 block">Task Title</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Task Title</label>
+              <span className={`text-[11px] font-semibold ${title.length >= TITLE_MAX ? "text-red-500" : "text-slate-400"}`}>
+                {title.length}/{TITLE_MAX}
+              </span>
+            </div>
             <input
               type="text"
               placeholder="What needs to be done?"
+              maxLength={TITLE_MAX}
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX))}
               className="w-full p-3 rounded-xl bg-white/60 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#4F7CFF] focus:ring-2 focus:ring-[#4F7CFF]/20 transition"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Description</label>
+              <span className={`text-[11px] font-semibold ${description.length >= DESCRIPTION_MAX ? "text-red-500" : "text-slate-400"}`}>
+                {description.length}/{DESCRIPTION_MAX}
+              </span>
+            </div>
+            <textarea
+              rows={4}
+              maxLength={DESCRIPTION_MAX}
+              placeholder="Add notes, checklist context, or any helpful detail..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value.slice(0, DESCRIPTION_MAX))}
+              className="w-full p-3 rounded-3xl bg-white/60 border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#4F7CFF] focus:ring-2 focus:ring-[#4F7CFF]/20 transition resize-none"
             />
           </div>
 
@@ -130,8 +180,8 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
                     type="button"
                     onClick={() => setPriority(p.name)}
                     className={`py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${isSel
-                        ? "bg-slate-800 text-white border-slate-800 shadow-sm"
-                        : `bg-white/60 text-slate-600 border-slate-200 ${p.color}`
+                      ? "bg-slate-800 text-white border-slate-800 shadow-sm"
+                      : `bg-white/60 text-slate-600 border-slate-200 ${p.color}`
                       }`}
                   >
                     {p.label}
@@ -203,8 +253,8 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
               type="button"
               onClick={() => setIsFocused(!isFocused)}
               className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all cursor-pointer ${isFocused
-                  ? "bg-amber-50 border-amber-300 text-amber-500 scale-105"
-                  : "bg-white border-slate-200 text-slate-400 hover:bg-slate-50"
+                ? "bg-amber-50 border-amber-300 text-amber-500 scale-105"
+                : "bg-white border-slate-200 text-slate-400 hover:bg-slate-50"
                 }`}
             >
               <svg

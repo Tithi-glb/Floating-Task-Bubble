@@ -135,6 +135,26 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
     }
   }, [settings.theme]);
 
+  useEffect(() => {
+    const handleGlobalShortcut = (event) => {
+      const isModifierPressed = event.ctrlKey || event.metaKey;
+      if (!isModifierPressed || event.key.toLowerCase() !== "t") return;
+
+      const target = event.target;
+      const tagName = target?.tagName?.toLowerCase();
+      const isInputField = ["input", "textarea", "select"].includes(tagName) || target?.isContentEditable;
+      if (isInputField) return;
+
+      event.preventDefault();
+      setIsModalOpen(true);
+    };
+
+    document.addEventListener("keydown", handleGlobalShortcut);
+    return () => {
+      document.removeEventListener("keydown", handleGlobalShortcut);
+    };
+  }, []);
+
   // Notifications state
   const [notifications, setNotifications] = useState([]);
 
@@ -263,9 +283,11 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
       ...prev,
       {
         id: Date.now(),
+        createdAt: newTask.createdAt || new Date().toISOString(),
+        updatedAt: newTask.updatedAt || newTask.createdAt || new Date().toISOString(),
         completed: false,
         isFocused: newTask.isFocused || false,
-        subtasks: [],
+        subtasks: newTask.subtasks || [],
         priority: newTask.priority || settings.defaultPriority,
         ...newTask,
       },
@@ -311,6 +333,21 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
     );
   };
 
+  const toggleSubtask = (taskId, subtaskId) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === taskId
+          ? {
+            ...t,
+            subtasks: t.subtasks.map((s) =>
+              s.id === subtaskId ? { ...s, done: !s.done } : s
+            ),
+          }
+          : t
+      )
+    );
+  };
+
   const handleEdit = (task) => {
     setEditingTask(task);
     setIsModalOpen(true);
@@ -319,6 +356,8 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
   const handleSaveSettings = (newSettings) => {
     setSettings(newSettings);
   };
+
+  const todayStr = new Date().toISOString().split("T")[0];
 
   const handleLogout = () => {
     if (onLogout) {
@@ -338,32 +377,23 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
     }
 
     if (activeCategory === "Dashboard") {
-      // Shows today's tasks
-      const today = new Date().toISOString().split("T")[0];
-
-      return t.dueDate === today;
+      return t.dueDate === todayStr;
     }
 
     if (activeCategory === "Calendar") {
-      // Shows tasks assigned to the selected date
       return t.dueDate === selectedDate;
     }
 
     if (activeCategory === "Focus Tasks") {
-      // Focus Tasks should update automatically according to the selected calendar date
       return t.dueDate === selectedDate && t.isFocused;
     }
 
     if (activeCategory === "My Tasks") {
-      // My Tasks contains all tasks created by the user, active tasks shouldn't disappear when focused
       return true;
     }
 
     if (activeCategory === "Priority Queue") {
-      // The Priority Queue should show only today's tasks
-      const isToday = t.dueDate === new Date().toISOString().split("T")[0];
-      if (!isToday) return false;
-
+      if (t.dueDate !== todayStr) return false;
       if (priorityFilter !== "all") {
         return t.priority.toLowerCase() === priorityFilter.toLowerCase();
       }
@@ -446,6 +476,21 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
             onDelete={deleteTask}
             onComplete={toggleTaskCompletion}
             onToggleFocus={toggleFocus}
+            onToggleSubtask={toggleSubtask}
+            onFocusTask={(taskId) => {
+              const selectedTask = tasks.find((t) => t.id === taskId);
+              setTasks((prev) =>
+                prev.map((t) =>
+                  t.id === taskId
+                    ? { ...t, isFocused: true }
+                    : t
+                )
+              );
+              if (selectedTask) {
+                setSelectedDate(selectedTask.dueDate || todayStr);
+                setActiveCategory("Focus Tasks");
+              }
+            }}
             onAddTask={() => setIsModalOpen(true)}
           />
         )}

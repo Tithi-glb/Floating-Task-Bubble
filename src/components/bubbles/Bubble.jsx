@@ -14,6 +14,13 @@ function formatDate(dateStr) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+function formatLongDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+}
+
 // Format HH:MM to 12h format
 function formatTime(timeStr) {
   if (!timeStr) return "";
@@ -23,34 +30,35 @@ function formatTime(timeStr) {
   return `${hour % 12 || 12}:${m} ${ampm}`;
 }
 
-function Bubble({ task, onEdit, onDelete, onComplete, onToggleFocus }) {
+function Bubble({ task, onEdit, onDelete, onComplete, onToggleFocus, onToggleSubtask, isTooltipOpen, onToggleTooltip }) {
+  const tooltipOpen = Boolean(isTooltipOpen);
   // Bubble size based on priority
-const sizeMap = {
-  High: {
-    px: 130,
-    hoverPx: 160,
-    titleSize: "text-lg",
-    timeSize: "text-xs",
-    badge: "🔥",
-  },
-  Medium: {
-    px: 115,
-    hoverPx: 144,
-    titleSize: "text-base",
-    timeSize: "text-[11px]",
-    badge: "⚡",
-  },
-  Low: {
-    px: 100,
-    hoverPx: 128,
-    titleSize: "text-sm",
-    timeSize: "text-[10px]",
-    badge: "🌱",
-  },
-};
+  const sizeMap = {
+    High: {
+      px: 130,
+      hoverPx: 160,
+      titleSize: "text-lg",
+      timeSize: "text-xs",
+      badge: "🔥",
+    },
+    Medium: {
+      px: 115,
+      hoverPx: 144,
+      titleSize: "text-base",
+      timeSize: "text-[11px]",
+      badge: "⚡",
+    },
+    Low: {
+      px: 100,
+      hoverPx: 128,
+      titleSize: "text-sm",
+      timeSize: "text-[10px]",
+      badge: "🌱",
+    },
+  };
 
-const { px, hoverPx, titleSize, timeSize, badge } =
-  sizeMap[task.priority] || sizeMap.Medium;
+  const { px, hoverPx, titleSize, timeSize, badge } =
+    sizeMap[task.priority] || sizeMap.Medium;
 
   // Progress from subtasks
   const subtasks = task.subtasks || [];
@@ -58,8 +66,37 @@ const { px, hoverPx, titleSize, timeSize, badge } =
   const totalSubs = subtasks.length;
   const progress = totalSubs > 0 ? Math.round((doneCount / totalSubs) * 100) : (task.completed ? 100 : 0);
 
-  // Iridescent soap bubble colour derived from task.color hue
-  const tint = task.color || "#7c3aed";
+  // Priority-based bubble colours
+  const priorityStyles = {
+    High: {
+      tint: "#fb923c",
+      background: `
+      radial-gradient(circle at 28% 22%, rgba(255,255,255,0.95) 0%, rgba(255,244,229,0.88) 28%, transparent 55%),
+      radial-gradient(circle at 72% 78%, rgba(251,146,60,0.25) 0%, transparent 48%),
+      radial-gradient(circle at 18% 68%, rgba(253,186,116,0.2) 0%, transparent 42%),
+      radial-gradient(circle at 65% 25%, rgba(251,146,60,0.16) 0%, transparent 38%)
+      `,
+    },
+    Medium: {
+      tint: "#facc15",
+      background: `
+      radial-gradient(circle at 28% 22%, rgba(255,255,255,0.95) 0%, rgba(255,251,204,0.88) 28%, transparent 55%),
+      radial-gradient(circle at 72% 78%, rgba(250,204,21,0.25) 0%, transparent 48%),
+      radial-gradient(circle at 18% 68%, rgba(253,230,138,0.2) 0%, transparent 42%),
+      radial-gradient(circle at 65% 25%, rgba(250,204,21,0.16) 0%, transparent 38%)
+      `,
+    },
+    Low: {
+      tint: "#4ade80",
+      background: `
+      radial-gradient(circle at 28% 22%, rgba(255,255,255,0.95) 0%, rgba(236,253,245,0.88) 28%, transparent 55%),
+      radial-gradient(circle at 72% 78%, rgba(74,222,128,0.25) 0%, transparent 48%),
+      radial-gradient(circle at 18% 68%, rgba(167,243,208,0.2) 0%, transparent 42%),
+      radial-gradient(circle at 65% 25%, rgba(74,222,128,0.16) 0%, transparent 38%)
+      `,
+    },
+  };
+  const { tint, background: priorityBackground } = priorityStyles[task.priority] || priorityStyles.Medium;
 
   // Urgency State (Deadline in less than 1 hour)
   const [isUrgent, setIsUrgent] = useState(false);
@@ -137,16 +174,20 @@ const { px, hoverPx, titleSize, timeSize, badge } =
         dragMomentum={false}
         whileDrag={{ scale: 1.08 }}
         whileHover={{
-  width: hoverPx,
-  height: hoverPx,
-  zIndex: 100,
-}}
-transition={{
-  type: "spring",
-  stiffness: 250,
-  damping: 20,
-}}
+          width: hoverPx,
+          height: hoverPx,
+          zIndex: 100,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 250,
+          damping: 20,
+        }}
         className="cursor-grab relative active:cursor-grabbing"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleTooltip?.();
+        }}
         style={{ width: px, height: px }}
       >
         {/* Soap-bubble sphere */}
@@ -170,7 +211,12 @@ transition={{
             top: 0,
             left: 0,
             borderRadius: "50%",
-            background: soapBackground,
+            background: isUrgent ? `
+              radial-gradient(circle at 28% 22%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.18) 28%, transparent 55%),
+              radial-gradient(circle at 72% 78%, rgba(239,68,68,0.2) 0%, transparent 48%),
+              radial-gradient(circle at 18% 68%, rgba(255,100,100,0.18) 0%, transparent 42%),
+              radial-gradient(circle at 65% 25%, rgba(239,68,68,0.15) 0%, transparent 38%)
+            ` : priorityBackground,
             border: borderStyle,
             boxShadow: glowShadow,
             zIndex: 10,
@@ -234,10 +280,235 @@ transition={{
           {/* Priority badge */}
           <span className="absolute top-8 text-xs pointer-events-none select-none z-20">{badge}</span>
 
+          {/* Tooltip */}
+          {tooltipOpen && (
+            <div
+              className="
+      pointer-events-auto
+      absolute
+      left-full
+      top-1/2
+      ml-4
+      -translate-y-1/2
+      z-50
+      w-[320px]
+      max-w-[90vw]
+      max-h-[80vh]
+      overflow-hidden
+      rounded-3xl
+      border border-white/60
+      bg-white/95
+      backdrop-blur-2xl
+      shadow-[0_20px_60px_rgba(15,23,42,0.18)]
+      text-slate-900
+    "
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between border-b border-slate-100 px-5 py-4">
+
+                <h3 className="truncate text-lg font-bold text-slate-900">
+                  {task.title}
+                </h3>
+
+
+
+
+                <span
+                  className={`ml-3 rounded-full px-1 py-1 text-[11px] font-semibold ${task.priority === "High"
+                    ? "bg-red-100 text-red-700"
+                    : task.priority === "Medium"
+                      ? "bg-orange-100 text-orange-700"
+                      : "bg-green-100 text-green-700"
+                    }`}
+                >
+                  {task.priority || "Medium"}
+                </span>
+              </div>
+
+              {/* Body */}
+              <div className="max-h-[65vh] overflow-y-auto px-5 py-4">
+
+                {/* Description */}
+                {task.description && (
+                  <div className="mb-4">
+                    <p className="text-sm leading-5 text-slate-700 break-words whitespace-pre-wrap">
+                      {task.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Due Date */}
+                <div className="mb-4 rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50 p-3">
+                  <div className="flex items-center gap-2">
+
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100">
+                      📅
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-indigo-500">
+                        Complete your task by
+                      </p>
+
+                      <p className="mt-0.5 text-sm font-semibold text-slate-800">
+                        {task.dueDate
+                          ? `${formatDate(task.dueDate)} • ${formatTime(task.time)}`
+                          : "No due date"}
+                      </p>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* Subtasks */}
+                <div className="mb-4">
+
+                  <div className="mb-3 flex items-center justify-between">
+
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      Subtasks
+                    </h4>
+
+                    {totalSubs > 0 && (
+                      <span className="rounded-full bg-indigo-100 px-2 py-1 text-[10px] font-bold text-indigo-700">
+                        {doneCount}/{totalSubs}
+                      </span>
+                    )}
+
+                  </div>
+
+                  <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+
+                    {subtasks.length > 0 ? (
+                      subtasks.map((subtask) => (
+                        <button
+                          key={subtask.id}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleSubtask?.(task.id, subtask.id);
+                          }}
+                          className={`group flex w-full items-center gap-3 rounded-2xl border p-3 transition-all duration-300 ${subtask.done
+                            ? "border-green-200 bg-green-50"
+                            : "border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50"
+                            }`}
+                        >
+                          <div
+                            className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition ${subtask.done
+                              ? "border-green-500 bg-green-500 text-white"
+                              : "border-slate-300 bg-white group-hover:border-indigo-500"
+                              }`}
+                          >
+                            {subtask.done ? (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-3.5 w-3.5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={3}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            ) : null}
+                          </div>
+
+                          <span
+                            className={`flex-1 text-left text-sm ${subtask.done
+                              ? "line-through text-slate-400"
+                              : "text-slate-700"
+                              }`}
+                          >
+                            {subtask.text}
+                          </span>
+
+                          <span
+                            className={`rounded-full px-2 py-1 text-[10px] font-semibold ${subtask.done
+                              ? "bg-green-100 text-green-700"
+                              : "bg-slate-100 text-slate-500"
+                              }`}
+                          >
+                            {subtask.done ? "Done" : "Pending"}
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-8 text-center">
+
+                        <div className="mb-2 text-3xl">
+                          📝
+                        </div>
+
+                        <p className="text-sm font-semibold text-slate-600">
+                          No subtasks yet
+                        </p>
+
+                        <p className="mt-1 text-xs text-slate-400">
+                          Add subtasks to track progress
+                        </p>
+
+                      </div>
+                    )}
+
+                  </div>
+
+                </div>
+
+                {/* Progress */}
+                <div>
+
+                  <div className="mb-2 flex items-center justify-between">
+
+                    <span className="text-sm font-semibold text-slate-700">
+                      Progress
+                    </span>
+
+                    <span className="text-sm font-bold text-indigo-600">
+                      {progress}%
+                    </span>
+
+                  </div>
+
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 transition-all duration-500"
+                      style={{ width: `${progress}%` }}
+                    />
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* Footer */}
+
+              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-5 py-3">
+
+                <span className="text-xs text-slate-500">
+                  {doneCount}/{totalSubs} Completed
+                </span>
+
+                <span className="text-[11px] text-slate-400">
+                  Created {formatLongDate(task.createdAt)}
+                </span>
+
+              </div>
+
+            </div>
+          )}
+
+
+
           {/* Content (Set higher z-index to stay readable over rising water level) */}
           <div className="text-center px-4 mt-1 select-none pointer-events-none flex flex-col items-center justify-center z-20 relative">
             <h2
-  className={`
+              className={`
     text-slate-800
     font-extrabold
     tracking-tight
@@ -249,21 +520,20 @@ transition={{
     gap-1
     text-center
     break-words
-    ${
-      task.title.length > 35
-        ? "text-[10px]"
-        : task.title.length > 20
-        ? "text-xs"
-        : titleSize
-    }
+    ${task.title.length > 35
+                  ? "text-[10px]"
+                  : task.title.length > 20
+                    ? "text-xs"
+                    : titleSize
+                }
   `}
->
-  {task.isFocused && (
-    <span className="text-amber-500">★</span>
-  )}
+            >
+              {task.isFocused && (
+                <span className="text-amber-500">★</span>
+              )}
 
-  {task.title}
-</h2>
+              {task.title}
+            </h2>
             <p className={`${timeSize} mt-0.5 font-semibold leading-none ${isUrgent ? "text-red-750 font-bold" : "text-slate-600"}`}>
               {formatTime(task.time)}
             </p>
