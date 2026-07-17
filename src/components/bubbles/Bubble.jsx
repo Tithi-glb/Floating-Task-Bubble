@@ -109,9 +109,9 @@ function getBubbleTheme(task) {
 }
 
 const sizeMap = {
-  High:   { px: 130, hoverPx: 148, badge: "🔥" },
+  High: { px: 130, hoverPx: 148, badge: "🔥" },
   Medium: { px: 115, hoverPx: 130, badge: "⚡" },
-  Low:    { px: 100, hoverPx: 114, badge: "🌱" },
+  Low: { px: 100, hoverPx: 114, badge: "🌱" },
 };
 
 // ─── Main Bubble Component ───────────────────────────────────────────────────
@@ -136,6 +136,7 @@ export default function Bubble({
   const progress = totalSubs > 0 ? Math.round((doneCount / totalSubs) * 100) : (task.completed ? 100 : 0);
 
   const [isUrgent, setIsUrgent] = useState(false);
+  const [isCritical, setIsCritical] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -197,14 +198,29 @@ export default function Bubble({
     }
   }, [showToolbar]);
 
-  // Check urgency (< 1 hr)
+  // Check urgency (< 1 hr) and critical alert (< 15 min or overdue)
   useEffect(() => {
     const check = () => {
-      if (!task.dueDate || !task.time || task.completed) return;
+      if (task.completed) {
+        setIsUrgent(false);
+        setIsCritical(false);
+        return;
+      }
+      const overdueState = isOverdue(task);
+      if (!task.dueDate || !task.time) {
+        setIsUrgent(false);
+        setIsCritical(overdueState);
+        return;
+      }
       const dl = new Date(`${task.dueDate}T${task.time}:00`);
-      if (isNaN(dl)) return;
+      if (isNaN(dl.getTime())) {
+        setIsUrgent(false);
+        setIsCritical(overdueState);
+        return;
+      }
       const diff = dl - new Date();
       setIsUrgent(diff > 0 && diff <= 60 * 60 * 1000);
+      setIsCritical(overdueState || (diff > 0 && diff <= 15 * 60 * 1000));
     };
     check();
     const id = setInterval(check, 10000);
@@ -233,10 +249,10 @@ export default function Bubble({
   // Dynamic font size for long titles
   const titleFontSize =
     task.title.length > 35 ? "text-[9px]" :
-    task.title.length > 25 ? "text-[10px]" :
-    task.title.length > 18 ? "text-xs" :
-    task.priority === "High" ? "text-sm" :
-    task.priority === "Low"  ? "text-[11px]" : "text-xs";
+      task.title.length > 25 ? "text-[10px]" :
+        task.title.length > 18 ? "text-xs" :
+          task.priority === "High" ? "text-sm" :
+            task.priority === "Low" ? "text-[11px]" : "text-xs";
 
   const borderStyle = overdue
     ? `2.5px solid rgba(185,28,28,0.8)`
@@ -248,19 +264,33 @@ export default function Bubble({
           ? `1.5px solid rgba(100,116,139,0.4)`
           : `1.5px solid ${theme.border}`;
 
-  const floatAnimation = {
-    y: [0, -8, 0],
-    ...(isUrgent || overdue
-      ? { boxShadow: [boxShadow, `inset 0 10px 26px rgba(255,255,255,0.55), 0 0 50px ${theme.glowStrong}, 0 0 90px ${theme.glowStrong}66`, boxShadow] }
-      : {}),
-  };
+  const floatAnimation = isCritical
+    ? {
+      x: [0, -1.5, 1.5, -1.5, 1.5, 0],
+      y: [0, -1, 1, -1, 1, 0],
+      rotate: [0, -0.5, 0.5, -0.5, 0.5, 0],
+      boxShadow: [boxShadow, `inset 0 10px 26px rgba(255,255,255,0.55), 0 0 50px ${theme.glowStrong}, 0 0 90px ${theme.glowStrong}66`, boxShadow]
+    }
+    : {
+      y: [0, -8, 0],
+      ...(isUrgent
+        ? { boxShadow: [boxShadow, `inset 0 10px 26px rgba(255,255,255,0.55), 0 0 50px ${theme.glowStrong}, 0 0 90px ${theme.glowStrong}66`, boxShadow] }
+        : {}),
+    };
 
-  const floatTransition = {
-    y: { duration: 3.2 + (Number(task.id) % 5) * 0.4, repeat: Infinity, ease: "easeInOut" },
-    ...(isUrgent || overdue
-      ? { boxShadow: { duration: 0.6, repeat: Infinity, ease: "easeInOut", repeatType: "reverse" } }
-      : {}),
-  };
+  const floatTransition = isCritical
+    ? {
+      x: { duration: 0.35, repeat: Infinity, ease: "linear" },
+      y: { duration: 0.35, repeat: Infinity, ease: "linear" },
+      rotate: { duration: 0.35, repeat: Infinity, ease: "linear" },
+      boxShadow: { duration: 0.5, repeat: Infinity, ease: "easeInOut", repeatType: "reverse" }
+    }
+    : {
+      y: { duration: 3.2 + (Number(task.id) % 5) * 0.4, repeat: Infinity, ease: "easeInOut" },
+      ...(isUrgent
+        ? { boxShadow: { duration: 0.6, repeat: Infinity, ease: "easeInOut", repeatType: "reverse" } }
+        : {}),
+    };
 
   return (
     <div
@@ -363,6 +393,18 @@ export default function Bubble({
           bubbleSize={px}
         />
 
+        {/* Overdue Badge attached to bubble inside draggable motion.div */}
+        {overdue && !task.completed && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute -top-7 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest z-30 whitespace-nowrap"
+            style={{ background: "rgba(185,28,28,0.9)", color: "white", backdropFilter: "blur(8px)" }}
+          >
+            ⚠ OVERDUE
+          </motion.div>
+        )}
+
         {/* Compact Tooltip / Mini Task Card attached to bubble inside draggable motion.div */}
         <AnimatePresence>
           {showTooltip && (
@@ -380,18 +422,6 @@ export default function Bubble({
           )}
         </AnimatePresence>
       </motion.div>
-
-      {/* Overdue Badge */}
-      {overdue && !task.completed && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute -top-7 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest z-30 whitespace-nowrap"
-          style={{ background: "rgba(185,28,28,0.9)", color: "white", backdropFilter: "blur(8px)" }}
-        >
-          ⚠ OVERDUE
-        </motion.div>
-      )}
 
       <style>{`
         @keyframes waveRotate {

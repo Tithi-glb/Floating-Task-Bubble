@@ -1,5 +1,4 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import BubbleAnalytics from "../BubbleAnalytics";
 import {
   loadProgressHistory,
   computeProductivityScore,
@@ -207,7 +206,6 @@ export default function ProgressTracker({ tasks, theme, onClose }) {
   const [selectedRange, setSelectedRange] = useState("7 Days");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
-  const [analyticsView, setAnalyticsView] = useState("daily");
 
   const [showTodayDetails, setShowTodayDetails] = useState(false);
   const [activeTab, setActiveTab] = useState("completed");
@@ -468,21 +466,7 @@ export default function ProgressTracker({ tasks, theme, onClose }) {
         </div>
       </div>
 
-      {/* ── Analytics Charts ── */}
-      <div className={`p-6 rounded-3xl border backdrop-blur-xl shadow-xl flex flex-col gap-4 mb-6 ${cardBg}`}>
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold flex items-center gap-2">📉 Analytics & Trends</h3>
-          <div className={`flex items-center p-1 rounded-full gap-1 ${theme === "dark" ? "bg-slate-800" : "bg-slate-100"}`}>
-            {["daily", "weekly", "monthly"].map((v) => (
-              <button key={v} onClick={() => setAnalyticsView(v)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer capitalize ${analyticsView === v ? "bg-[#4F7CFF] text-white shadow" : `${mutedText} hover:text-slate-800`}`}>
-                {v}
-              </button>
-            ))}
-          </div>
-        </div>
-        <BubbleAnalytics tasks={tasks} theme={theme} view={analyticsView} />
-      </div>
+
 
       {/* ── Activity History ── */}
       <div className={`p-6 rounded-3xl border backdrop-blur-xl shadow-xl flex flex-col gap-6 ${cardBg}`}>
