@@ -388,24 +388,24 @@ function PreviewPanel({
         )}
       </AnimatePresence>
 
-      {/* Focus Mode Exit overlay button */ }
-  {
-    focusMode && (
-      <button
-        onClick={() => setFocusMode(false)}
-        className="absolute top-6 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full bg-white/70 backdrop-blur-md border border-[#4F7CFF]/30 hover:border-[#4F7CFF] text-[#4F7CFF] hover:bg-[#EEF4FF] font-bold text-xs shadow-md transition-all duration-200 cursor-pointer flex items-center gap-1.5 z-40 hover:scale-105 active:scale-95"
-      >
-        <span>🎯</span>
-        <span>Exit Focus Mode</span>
-      </button>
-    )
-  }
-  {
-    isAllTasksEmpty ? (
-      <div className="absolute inset-0 flex items-center justify-center z-10">
-        <div
-          className={
-            `
+      {/* Focus Mode Exit overlay button */}
+      {
+        focusMode && (
+          <button
+            onClick={() => setFocusMode(false)}
+            className="absolute top-6 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full bg-white/70 backdrop-blur-md border border-[#4F7CFF]/30 hover:border-[#4F7CFF] text-[#4F7CFF] hover:bg-[#EEF4FF] font-bold text-xs shadow-md transition-all duration-200 cursor-pointer flex items-center gap-1.5 z-40 hover:scale-105 active:scale-95"
+          >
+            <span>🎯</span>
+            <span>Exit Focus Mode</span>
+          </button>
+        )
+      }
+      {
+        isAllTasksEmpty ? (
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div
+              className={
+                `
                 w-full
                 max-w-130
                 rounded-3xl
@@ -414,52 +414,52 @@ function PreviewPanel({
                 text-center
                 shadow-2xl
                 ${theme === "dark"
-              ? "bg-slate-900/90 border border-slate-800 text-slate-100"
-              : "bg-white/80 border border-white/50 text-slate-900"
-            }
+                  ? "bg-slate-900/90 border border-slate-800 text-slate-100"
+                  : "bg-white/80 border border-white/50 text-slate-900"
+                }
               `
-          }
-        >
-          <div className="mx-auto w-28 h-28 rounded-full bg-linear-to-br from-[#4F7CFF] to-[#A855F7] shadow-lg flex items-center justify-center text-5xl mb-6">
-            🫧
+              }
+            >
+              <div className="mx-auto w-28 h-28 rounded-full bg-linear-to-br from-[#4F7CFF] to-[#A855F7] shadow-lg flex items-center justify-center text-5xl mb-6">
+                🫧
+              </div>
+
+              <h1 className={`text-3xl font-bold ${theme === "dark" ? "text-slate-100" : "text-[#0F172A]"}`}>
+                {emptyStateTitle}
+              </h1>
+
+              <p className={`mt-3 text-base ${theme === "dark" ? "text-slate-300" : "text-gray-500"}`}>
+                {emptyStateSubtitle}
+              </p>
+
+              <div className="grid grid-cols-3 gap-4 mt-8">
+                <div className={`rounded-2xl p-4 hover:scale-105 transition ${theme === "dark" ? "bg-slate-800 text-slate-100" : "bg-[#F4F8FF]"}`}>
+                  <div className="text-2xl">➕</div>
+                  <p className="mt-2 text-sm font-semibold">Create Task</p>
+                </div>
+                <div className={`rounded-2xl p-4 hover:scale-105 transition ${theme === "dark" ? "bg-slate-800 text-slate-100" : "bg-[#F5ECFF]"}`}>
+                  <div className="text-2xl">🎯</div>
+                  <p className="mt-2 text-sm font-semibold">Focus Mode</p>
+                </div>
+                <div className={`rounded-2xl p-4 hover:scale-105 transition ${theme === "dark" ? "bg-slate-800 text-slate-100" : "bg-[#ECFDF5]"}`}>
+                  <div className="text-2xl">📅</div>
+                  <p className="mt-2 text-sm font-semibold">Plan Day</p>
+                </div>
+              </div>
+
+              <button
+                onClick={onAddTask}
+                className="mt-8 px-8 py-3 rounded-full bg-[#4F7CFF] text-white font-semibold shadow-lg hover:scale-105 transition cursor-pointer"
+              >
+                Create Your First Task
+              </button>
+            </div>
           </div>
-
-          <h1 className={`text-3xl font-bold ${theme === "dark" ? "text-slate-100" : "text-[#0F172A]"}`}>
-            {emptyStateTitle}
-          </h1>
-
-          <p className={`mt-3 text-base ${theme === "dark" ? "text-slate-300" : "text-gray-500"}`}>
-            {emptyStateSubtitle}
-          </p>
-
-          <div className="grid grid-cols-3 gap-4 mt-8">
-            <div className={`rounded-2xl p-4 hover:scale-105 transition ${theme === "dark" ? "bg-slate-800 text-slate-100" : "bg-[#F4F8FF]"}`}>
-              <div className="text-2xl">➕</div>
-              <p className="mt-2 text-sm font-semibold">Create Task</p>
-            </div>
-            <div className={`rounded-2xl p-4 hover:scale-105 transition ${theme === "dark" ? "bg-slate-800 text-slate-100" : "bg-[#F5ECFF]"}`}>
-              <div className="text-2xl">🎯</div>
-              <p className="mt-2 text-sm font-semibold">Focus Mode</p>
-            </div>
-            <div className={`rounded-2xl p-4 hover:scale-105 transition ${theme === "dark" ? "bg-slate-800 text-slate-100" : "bg-[#ECFDF5]"}`}>
-              <div className="text-2xl">📅</div>
-              <p className="mt-2 text-sm font-semibold">Plan Day</p>
-            </div>
-          </div>
-
-          <button
-            onClick={onAddTask}
-            className="mt-8 px-8 py-3 rounded-full bg-[#4F7CFF] text-white font-semibold shadow-lg hover:scale-105 transition cursor-pointer"
-          >
-            Create Your First Task
-          </button>
-        </div>
-      </div>
-    ) : hasNoFilteredTasks ? (
-      <div className="absolute inset-0 flex items-center justify-center z-10 px-6">
-        <div
-          className={
-            `
+        ) : hasNoFilteredTasks ? (
+          <div className="absolute inset-0 flex items-center justify-center z-10 px-6">
+            <div
+              className={
+                `
                 w-full
                 max-w-lg
                 rounded-3xl
@@ -467,54 +467,54 @@ function PreviewPanel({
                 text-center
                 shadow-2xl
                 ${theme === "dark"
-              ? "bg-slate-900/90 border border-slate-800 text-slate-100"
-              : "bg-white/90 border border-slate-200 text-slate-900"
-            }
+                  ? "bg-slate-900/90 border border-slate-800 text-slate-100"
+                  : "bg-white/90 border border-slate-200 text-slate-900"
+                }
               `
-          }
-        >
-          <div className="mx-auto w-24 h-24 rounded-full bg-slate-100/80 dark:bg-slate-800 flex items-center justify-center text-5xl mb-5">
-            🧭
-          </div>
+              }
+            >
+              <div className="mx-auto w-24 h-24 rounded-full bg-slate-100/80 dark:bg-slate-800 flex items-center justify-center text-5xl mb-5">
+                🧭
+              </div>
 
-          <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
-            {emptyStateTitle}
-          </h2>
-          <p className={`mt-3 text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-            {emptyStateSubtitle}
-          </p>
-          <button
-            onClick={onAddTask}
-            className="mt-6 inline-flex items-center justify-center rounded-full bg-[#4F7CFF] px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-[#3565d6] transition cursor-pointer"
+              <h2 className={`text-2xl font-bold ${theme === "dark" ? "text-slate-100" : "text-slate-900"}`}>
+                {emptyStateTitle}
+              </h2>
+              <p className={`mt-3 text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+                {emptyStateSubtitle}
+              </p>
+              <button
+                onClick={onAddTask}
+                className="mt-6 inline-flex items-center justify-center rounded-full bg-[#4F7CFF] px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-[#3565d6] transition cursor-pointer"
+              >
+                Create a task
+              </button>
+            </div>
+          </div>
+        ) : null
+      }
+      {
+        tasks.map((task, index) => (
+          <div
+            key={task.id}
+            className="absolute transition-transform duration-300 hover:scale-105"
+            style={positions[index % positions.length]}
           >
-            Create a task
-          </button>
-        </div>
-      </div>
-    ) : null
-  }
-  {
-    tasks.map((task, index) => (
-      <div
-        key={task.id}
-        className="absolute transition-transform duration-300 hover:scale-105"
-        style={positions[index % positions.length]}
-      >
-        <Bubble
-          key={task.id}
-          task={task}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onComplete={onComplete}
-          onToggleFocus={onToggleFocus}
-          onToggleSubtask={onToggleSubtask}
-          isTooltipOpen={activeTooltipTaskId === task.id}
-          onToggleTooltip={() => setActiveTooltipTaskId((prev) => (prev === task.id ? null : task.id))}
-          isFocusedTask={task.id === focusedTaskId}
-        />
-      </div>
-    ))
-  }
+            <Bubble
+              key={task.id}
+              task={task}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onComplete={onComplete}
+              onToggleFocus={onToggleFocus}
+              onToggleSubtask={onToggleSubtask}
+              isTooltipOpen={activeTooltipTaskId === task.id}
+              onToggleTooltip={() => setActiveTooltipTaskId((prev) => (prev === task.id ? null : task.id))}
+              isFocusedTask={task.id === focusedTaskId}
+            />
+          </div>
+        ))
+      }
     </div >
   );
 }
