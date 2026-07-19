@@ -62,8 +62,8 @@ function getBubbleTheme(task) {
       glow: "rgba(148,163,184,0.45)",
       glowStrong: "rgba(100,116,139,0.6)",
       border: "rgba(100,116,139,0.5)",
-      waterColor: "rgba(148,163,184,0.25)",
-      waterTop: "rgba(100,116,139,0.15)",
+      waterColor: "rgba(14, 165, 233, 0.4)",
+      waterTop: "rgba(56, 189, 248, 0.25)",
       timeColor: "text-black/85",
     };
   }
@@ -72,8 +72,8 @@ function getBubbleTheme(task) {
       glow: "rgba(185,28,28,0.55)",
       glowStrong: "rgba(153,27,27,0.85)",
       border: "rgba(153,27,27,0.75)",
-      waterColor: "rgba(185,28,28,0.3)",
-      waterTop: "rgba(220,38,38,0.18)",
+      waterColor: "rgba(14, 165, 233, 0.65)",
+      waterTop: "rgba(56, 189, 248, 0.45)",
       timeColor: "text-black/90 font-black",
     };
   }
@@ -83,8 +83,8 @@ function getBubbleTheme(task) {
         glow: "rgba(220,38,38,0.45)",
         glowStrong: "rgba(239,68,68,0.7)",
         border: "rgba(220,38,38,0.65)",
-        waterColor: "rgba(220,38,38,0.25)",
-        waterTop: "rgba(239,68,68,0.15)",
+        waterColor: "rgba(14, 165, 233, 0.65)",
+        waterTop: "rgba(56, 189, 248, 0.45)",
         timeColor: "text-black/90 font-bold",
       };
     case "Low":
@@ -92,8 +92,8 @@ function getBubbleTheme(task) {
         glow: "rgba(16,185,129,0.45)",
         glowStrong: "rgba(52,211,153,0.7)",
         border: "rgba(16,185,129,0.6)",
-        waterColor: "rgba(16,185,129,0.25)",
-        waterTop: "rgba(52,211,153,0.15)",
+        waterColor: "rgba(14, 165, 233, 0.65)",
+        waterTop: "rgba(56, 189, 248, 0.45)",
         timeColor: "text-black/90",
       };
     default: // Medium
@@ -101,8 +101,8 @@ function getBubbleTheme(task) {
         glow: "rgba(245,158,11,0.45)",
         glowStrong: "rgba(251,191,36,0.7)",
         border: "rgba(217,119,6,0.6)",
-        waterColor: "rgba(245,158,11,0.25)",
-        waterTop: "rgba(251,191,36,0.15)",
+        waterColor: "rgba(14, 165, 233, 0.65)",
+        waterTop: "rgba(56, 189, 248, 0.45)",
         timeColor: "text-black/90",
       };
   }

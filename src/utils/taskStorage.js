@@ -14,6 +14,7 @@ export function normalizeTask(task = {}, defaults = {}) {
   const createdAt = safeTask.createdAt || new Date().toISOString();
 
   return {
+    ...safeTask,
     id: safeTask.id || `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     title: safeTask.title || "",
     description: safeTask.description || "",
@@ -27,8 +28,9 @@ export function normalizeTask(task = {}, defaults = {}) {
     dueDate: safeTask.dueDate || dateValue,
     isFocused: Boolean(safeTask.isFocused),
     color: safeTask.color || "#60A5FA",
-    ...safeTask,
-
+    reminderDate: safeTask.reminderDate || "",
+    reminderTime: safeTask.reminderTime || "",
+    hasReminder: safeTask.hasReminder !== undefined ? safeTask.hasReminder : !!(safeTask.reminderDate && safeTask.reminderTime),
   };
 }
 

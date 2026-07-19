@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import Tooltip from "../Tooltip";
 
 function Sidebar({
   theme,
@@ -10,6 +11,8 @@ function Sidebar({
   priorityFilter,
   setPriorityFilter,
   onAddTask,
+  onOpenWhatsNew,
+  onOpenFeatures,
 }) {
   const [navDate, setNavDate] = useState(() => new Date());
 
@@ -128,44 +131,47 @@ function Sidebar({
         : "border-slate-200 bg-white/70 text-slate-900"
     }`}>
       <div className="flex flex-col gap-6 overflow-y-auto max-h-[85vh] pr-1">
-        <button
-          onClick={onAddTask}
-          className="w-full rounded-2xl bg-gradient-to-r from-[#4F7CFF] to-[#7c3aed] px-4 py-3.5 text-base font-semibold text-white shadow-md shadow-[#4F7CFF]/20 hover:shadow-lg hover:shadow-[#4F7CFF]/30 transition-all cursor-pointer flex items-center justify-center gap-2"
-        >
-          <span>✨</span>
-          <span>New Floating Task</span>
-        </button>
+        <Tooltip content="Create a new task" className="w-full">
+          <button
+            onClick={onAddTask}
+            className="w-full rounded-2xl bg-gradient-to-r from-[#4F7CFF] to-[#7c3aed] px-4 py-3.5 text-base font-semibold text-white shadow-md shadow-[#4F7CFF]/20 hover:shadow-lg hover:shadow-[#4F7CFF]/30 transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span>✨</span>
+            <span>New Floating Task</span>
+          </button>
+        </Tooltip>
 
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-2">Navigation</label>
           {categories.map((cat) => {
             const isActive = activeCategory === cat.name;
             return (
-              <button
-                key={cat.name}
-                onClick={() => setActiveCategory(cat.name)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 cursor-pointer ${
-                  isActive
-                    ? "bg-gradient-to-r from-[#4F7CFF]/15 to-[#7c3aed]/15 text-[#4F7CFF] border-l-4 border-[#4F7CFF] font-semibold"
-                    : inactiveCategoryClasses
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="text-base">{cat.icon}</span>
-                  <span>{cat.name}</span>
-                </div>
-                {cat.badge !== null && cat.badge > 0 && (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              <Tooltip key={cat.name} content={`View ${cat.name}`} className="w-full">
+                <button
+                  onClick={() => setActiveCategory(cat.name)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "bg-[#4F7CFF] text-white"
-                      : theme === "dark"
-                        ? "bg-slate-700 text-slate-200"
-                        : "bg-slate-100 text-slate-500"
-                  }`}>
-                    {cat.badge}
-                  </span>
-                )}
-              </button>
+                      ? "bg-gradient-to-r from-[#4F7CFF]/15 to-[#7c3aed]/15 text-[#4F7CFF] border-l-4 border-[#4F7CFF] font-semibold"
+                      : inactiveCategoryClasses
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-base">{cat.icon}</span>
+                    <span>{cat.name}</span>
+                  </div>
+                  {cat.badge !== null && cat.badge > 0 && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isActive
+                        ? "bg-[#4F7CFF] text-white"
+                        : theme === "dark"
+                          ? "bg-slate-700 text-slate-200"
+                          : "bg-slate-100 text-slate-500"
+                    }`}>
+                      {cat.badge}
+                    </span>
+                  )}
+                </button>
+              </Tooltip>
             );
           })}
         </div>
@@ -182,17 +188,18 @@ function Sidebar({
               ].map((p) => {
                 const isFilterActive = priorityFilter.toLowerCase() === p.filter.toLowerCase();
                 return (
-                  <button
-                    key={p.filter}
-                    onClick={() => setPriorityFilter(p.filter)}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer text-center ${
-                      isFilterActive
-                        ? `${p.color} border-current shadow-sm scale-[1.02]`
-                        : "bg-white border-slate-200 text-slate-500 hover:bg-slate-100"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
+                  <Tooltip key={p.filter} content={`Filter by ${p.filter} priority`} className="w-full">
+                    <button
+                      onClick={() => setPriorityFilter(p.filter)}
+                      className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer text-center ${
+                        isFilterActive
+                          ? `${p.color} border-current shadow-sm scale-[1.02]`
+                          : "bg-white border-slate-200 text-slate-500 hover:bg-slate-100"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  </Tooltip>
                 );
               })}
             </div>
@@ -201,21 +208,25 @@ function Sidebar({
       {activeCategory === "Calendar" && (
         <div className={`${miniCalendarBg} p-4 rounded-2xl border flex flex-col gap-3`}>
           <div className="flex items-center justify-between">
-            <button
-              onClick={handlePrevMonth}
-              className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition cursor-pointer border ${miniCalendarButton}`}
-            >
-              &lt;
-            </button>
+            <Tooltip content="Previous month">
+              <button
+                onClick={handlePrevMonth}
+                className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition cursor-pointer border ${miniCalendarButton}`}
+              >
+                &lt;
+              </button>
+            </Tooltip>
             <span className={`text-xs font-extrabold ${theme === "dark" ? "text-slate-100" : "text-slate-700"}`}>
               {monthNames[navDate.getMonth()]} {navDate.getFullYear()}
             </span>
-            <button
-              onClick={handleNextMonth}
-              className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition cursor-pointer border ${miniCalendarButton}`}
-            >
-              &gt;
-            </button>
+            <Tooltip content="Next month">
+              <button
+                onClick={handleNextMonth}
+                className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs transition cursor-pointer border ${miniCalendarButton}`}
+              >
+                &gt;
+              </button>
+            </Tooltip>
           </div>
 
           <div className="grid grid-cols-7 text-center text-[9px] font-black text-slate-400">
@@ -226,24 +237,25 @@ function Sidebar({
             {calendarDays.map((d, index) => {
               const isSelected = d.dateString === selectedDate;
               return (
-                <button
-                  key={`${d.dateString}-${index}`}
-                  onClick={() => {
-                    setSelectedDate(d.dateString);
-                    if (activeCategory !== "Focus Tasks" && activeCategory !== "Calendar") {
-                      setActiveCategory("Calendar");
-                    }
-                  }}
-                  className={`aspect-square w-7 rounded-lg text-[10px] font-semibold flex items-center justify-center transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-[#4F7CFF] text-white shadow-md shadow-[#4F7CFF]/30 font-bold"
-                      : d.isCurrentMonth
-                      ? normalDayText
-                      : mutedDayText
-                  }`}
-                >
-                  {d.day}
-                </button>
+                <Tooltip key={`${d.dateString}-${index}`} content={`View ${d.dateString}`}>
+                  <button
+                    onClick={() => {
+                      setSelectedDate(d.dateString);
+                      if (activeCategory !== "Focus Tasks" && activeCategory !== "Calendar") {
+                        setActiveCategory("Calendar");
+                      }
+                    }}
+                    className={`aspect-square w-7 rounded-lg text-[10px] font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-[#4F7CFF] text-white shadow-md shadow-[#4F7CFF]/30 font-bold"
+                        : d.isCurrentMonth
+                        ? normalDayText
+                        : mutedDayText
+                    }`}
+                  >
+                    {d.day}
+                  </button>
+                </Tooltip>
               );
             })}
           </div>
@@ -256,10 +268,31 @@ function Sidebar({
         )}
       </div>
 
-      <div className={`text-center text-[10px] ${theme === "dark" ? "text-slate-400" : "text-slate-500"} font-medium pt-2 border-t ${theme === "dark" ? "border-slate-700" : "border-slate-200"} flex items-center justify-center gap-1`}>
-        <span>BubbleSpace OS</span>
-        <span>•</span>
-        <span>v1.2.0</span>
+      <div className={`pt-2 border-t ${theme === "dark" ? "border-slate-700" : "border-slate-200"} flex flex-col gap-2 shrink-0`}>
+        <div className="flex items-center justify-center gap-3.5 text-xs font-semibold">
+          <button 
+            onClick={onOpenWhatsNew} 
+            className={`transition cursor-pointer ${
+              theme === "dark" ? "text-slate-400 hover:text-[#4F7CFF]" : "text-slate-500 hover:text-[#4F7CFF]"
+            }`}
+          >
+            What's New
+          </button>
+          <span className="text-slate-300 dark:text-slate-700">•</span>
+          <button 
+            onClick={onOpenFeatures} 
+            className={`transition cursor-pointer ${
+              theme === "dark" ? "text-slate-400 hover:text-[#4F7CFF]" : "text-slate-500 hover:text-[#4F7CFF]"
+            }`}
+          >
+            Features
+          </button>
+        </div>
+        <div className={`text-center text-[10px] ${theme === "dark" ? "text-slate-400" : "text-slate-500"} font-medium flex items-center justify-center gap-1`}>
+          <span>BubbleSpace OS</span>
+          <span>•</span>
+          <span>v1.2.0</span>
+        </div>
       </div>
     </div>
   );

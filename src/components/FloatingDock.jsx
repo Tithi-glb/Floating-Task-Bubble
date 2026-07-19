@@ -5,6 +5,7 @@ import CalendarPanel from "./CalendarPanel";
 import ProgressPanel from "./ProgressPanel";
 import PendingTasksPanel from "./PendingTasksPanel";
 import CompletedTasksPanel from "./CompletedTasksPanel";
+import QuickAddTaskPanel from "./QuickAddTaskPanel";
 
 const DOCK_ITEMS = [
   { key: "calendar",   icon: "📅", label: "Calendar" },
@@ -26,7 +27,16 @@ const DOCK_ITEMS = [
  *  onEdit       — fn(task)
  *  onDelete     — fn(id)
  */
-export default function FloatingDock({ tasks, theme, onAddTask, onUpdateTask, onComplete, onEdit, onDelete }) {
+export default function FloatingDock({
+  tasks,
+  theme,
+  onUpdateTask,
+  onComplete,
+  onEdit,
+  onDelete,
+  onCreateTask,
+  defaultPriority = "Medium",
+}) {
   const [activePanel, setActivePanel] = useState(null); // key or null
   const [mouseX, setMouseX] = useState(null);
   const dockRef = useRef(null);
@@ -59,10 +69,23 @@ export default function FloatingDock({ tasks, theme, onAddTask, onUpdateTask, on
     return () => document.removeEventListener("mousedown", handleClick);
   }, [activePanel]);
 
+  useEffect(() => {
+    if (!activePanel) return;
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setActivePanel(null);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, [activePanel]);
+
   const handleIconClick = (key) => {
     if (key === "addtask") {
-      onAddTask();
-      setActivePanel(null);
+      setActivePanel((prev) => (prev === "addtask" ? null : "addtask"));
       return;
     }
     setActivePanel((prev) => (prev === key ? null : key));
@@ -98,7 +121,7 @@ export default function FloatingDock({ tasks, theme, onAddTask, onUpdateTask, on
     <>
       {/* Panel overlay — rendered below dock */}
       <AnimatePresence>
-        {activePanel && activePanel !== "addtask" && (
+        {activePanel && (
           <motion.div
             key={activePanel}
             data-dock-panel="true"
@@ -107,7 +130,7 @@ export default function FloatingDock({ tasks, theme, onAddTask, onUpdateTask, on
             exit={{ opacity: 0, y: 20, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
             className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[998]"
-            style={{ maxWidth: "min(680px, calc(100vw - 48px))", width: "100%" }}
+            style={{ maxWidth: activePanel === "addtask" ? "min(480px, calc(100vw - 48px))" : "min(680px, calc(100vw - 48px))", width: "100%" }}
           >
             <div
               className="rounded-3xl overflow-hidden shadow-2xl"
@@ -122,21 +145,23 @@ export default function FloatingDock({ tasks, theme, onAddTask, onUpdateTask, on
               }}
             >
               {/* Panel header */}
-              <div className={`flex items-center justify-between px-5 pt-5 pb-3 ${isDark ? "border-b border-slate-800" : "border-b border-slate-100"}`}>
-                <h2 className={`text-lg font-extrabold flex items-center gap-2 ${isDark ? "text-white" : "text-slate-800"}`}>
-                  {DOCK_ITEMS.find((d) => d.key === activePanel)?.icon}{" "}
-                  {DOCK_ITEMS.find((d) => d.key === activePanel)?.label}
-                </h2>
-                <button
-                  onClick={() => setActivePanel(null)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm cursor-pointer transition-all ${isDark ? "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white" : "bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500"}`}
-                >
-                  ✕
-                </button>
-              </div>
+              {activePanel !== "addtask" && (
+                <div className={`flex items-center justify-between px-5 pt-5 pb-3 ${isDark ? "border-b border-slate-800" : "border-b border-slate-100"}`}>
+                  <h2 className={`text-lg font-extrabold flex items-center gap-2 ${isDark ? "text-white" : "text-slate-800"}`}>
+                    {DOCK_ITEMS.find((d) => d.key === activePanel)?.icon}{" "}
+                    {DOCK_ITEMS.find((d) => d.key === activePanel)?.label}
+                  </h2>
+                  <button
+                    onClick={() => setActivePanel(null)}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm cursor-pointer transition-all ${isDark ? "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white" : "bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-500"}`}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
 
               {/* Panel content */}
-              <div className="p-5">
+              <div className={activePanel === "addtask" ? "" : "p-5"}>
                 {activePanel === "calendar" && (
                   <CalendarPanel tasks={tasks} theme={theme} onClose={() => setActivePanel(null)} />
                 )}
@@ -148,6 +173,14 @@ export default function FloatingDock({ tasks, theme, onAddTask, onUpdateTask, on
                 )}
                 {activePanel === "completed" && (
                   <CompletedTasksPanel tasks={tasks} theme={theme} />
+                )}
+                {activePanel === "addtask" && (
+                  <QuickAddTaskPanel
+                    theme={theme}
+                    onCreateTask={onCreateTask}
+                    defaultPriority={defaultPriority}
+                    onClose={() => setActivePanel(null)}
+                  />
                 )}
               </div>
             </div>

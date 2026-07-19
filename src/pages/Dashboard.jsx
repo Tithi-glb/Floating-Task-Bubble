@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/layout/Navbar";
@@ -8,10 +8,41 @@ import SettingsPanel from "../components/layout/SettingsPanel";
 import AddTaskModal from "../components/modals/AddTaskModal";
 import ProgressTracker from "../components/layout/ProgressTracker";
 import FloatingDock from "../components/FloatingDock";
+import { ToastContainer } from "../components/Toast";
+import ConfirmDeleteModal from "../components/modals/ConfirmDeleteModal";
+import FloatingTaskListBubble from "../components/FloatingTaskListBubble";
+import WhatsNewModal from "../components/modals/WhatsNewModal";
+import FeaturesModal from "../components/modals/FeaturesModal";
 
-import { showNotification } from "../utils/notification";
-import { loadTasks, saveTasks, normalizeTask } from "../utils/taskStorage";
+import { loadTasks, saveTasks } from "../utils/taskStorage";
 import { syncTodaySnapshot } from "../utils/progressStorage";
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  d.setHours(0, 0, 0, 0);
+  if (d.getTime() === today.getTime()) return "Today";
+  if (d.getTime() === tomorrow.getTime()) return "Tomorrow";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function formatTime(timeStr) {
+  if (!timeStr) return "";
+  const [h, m] = timeStr.split(":");
+  const hour = parseInt(h, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  return `${hour % 12 || 12}:${m} ${ampm}`;
+}
+
+function parseLocalDateTime(dateStr, timeStr) {
+  if (!dateStr) return new Date(NaN);
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hour, minute] = (timeStr || "00:00").split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+}
 
 // ─── Notification chime ───────────────────────────────────────────────────────
 const playNotificationSound = () => {
@@ -32,26 +63,28 @@ const playNotificationSound = () => {
     gain2.gain.setValueAtTime(0.2, now + 0.12);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.52);
     osc2.start(now + 0.12); osc2.stop(now + 0.52);
-  } catch (e) { /* ignore */ }
+  } catch { /* ignore */ }
 };
+
+const generateId = () => Date.now();
 
 function Dashboard({ userProfile: propUserProfile, onLogout }) {
   const navigate = useNavigate();
   const isDesktopMode = new URLSearchParams(window.location.search).get("desktop") === "true";
 
-  const fallbackUserProfile = (() => {
+  const fallbackUserProfile = useMemo(() => {
     try {
       const s = localStorage.getItem("ftb_user_profile");
       return s ? JSON.parse(s) : null;
     } catch { return null; }
-  })();
+  }, []);
 
-  const userProfile = propUserProfile || fallbackUserProfile || {
+  const userProfile = useMemo(() => propUserProfile || fallbackUserProfile || {
     name: "Guest User",
     role: "Viewer",
     avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=guest",
     email: "guest@bubblespace.io",
-  };
+  }, [propUserProfile, fallbackUserProfile]);
 
   const [tasks, setTasks] = useState(() => loadTasks(userProfile));
 
@@ -73,9 +106,32 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [notifications, setNotifications] = useState([]);
   const notifiedTasksRef = useRef(new Set());
+  const lastNotifiedTimesRef = useRef(new Map());
+  const [toasts, setToasts] = useState([]);
+  const [taskToDelete, setTaskToDelete] = useState(null);
+  const [isWhatsNewOpen, setIsWhatsNewOpen] = useState(false);
+  const [isFeaturesOpen, setIsFeaturesOpen] = useState(false);
+
+  const addToast = (message, type = "info", action = null) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, message, type, action }]);
+  };
+
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const handleDeleteRequest = (taskId) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (task) {
+      setTaskToDelete(task);
+    }
+  };
 
   // Persist tasks
-  useEffect(() => { saveTasks(tasks, userProfile); }, [tasks]);
+  useEffect(() => { saveTasks(tasks, userProfile); }, [tasks, userProfile]);
+
+
 
   // Sync daily progress snapshot whenever tasks change
   useEffect(() => { syncTodaySnapshot(tasks); }, [tasks]);
@@ -107,7 +163,27 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
 
   // Request notification permission
   useEffect(() => {
-    if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+    if ("Notification" in window) {
+      const ask = () => {
+        if (Notification.permission === "default") {
+          try {
+            const result = Notification.requestPermission((perm) => {
+              console.log("Notification permission via callback:", perm);
+            });
+            if (result && typeof result.then === "function") {
+              result.then((perm) => {
+                console.log("Notification permission via promise:", perm);
+              });
+            }
+          } catch (e) {
+            console.error("Error requesting notification permission:", e);
+          }
+        }
+      };
+      ask();
+      window.addEventListener("click", ask, { once: true });
+      return () => window.removeEventListener("click", ask);
+    }
   }, []);
 
   // Deadline notifications
@@ -117,19 +193,55 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
       const now = new Date();
       tasks.forEach((task) => {
         if (task.completed || !task.dueDate || !task.time) return;
-        const dl = new Date(`${task.dueDate}T${task.time}:00`);
-        if (isNaN(dl)) return;
-        const diff = dl - now;
-        const oneHour = 60 * 60 * 1000;
-        if (diff > 0 && diff <= oneHour && !notifiedTasksRef.current.has(task.id)) {
-          notifiedTasksRef.current.add(task.id);
-          playNotificationSound();
-          const timeLabel = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-          setNotifications((prev) => [
-            { id: Date.now() + task.id, text: `⏳ "${task.title}" is due in less than 1 hour!`, time: timeLabel, read: false },
-            ...prev,
-          ]);
-          showNotification(task);
+        const dl = parseLocalDateTime(task.dueDate, task.time);
+        if (isNaN(dl.getTime())) return;
+
+        const hasCustomReminder = !!(task.reminderDate && task.reminderTime);
+        const reminderDateTime = hasCustomReminder
+          ? parseLocalDateTime(task.reminderDate, task.reminderTime)
+          : new Date(dl.getTime() - 60 * 60 * 1000);
+
+        if (isNaN(reminderDateTime.getTime())) return;
+
+        if (now >= reminderDateTime) {
+          const lastNotified = lastNotifiedTimesRef.current.get(task.id);
+          const fifteenMinutes = 15 * 60 * 1000;
+
+          if (!lastNotified || (now.getTime() - lastNotified >= fifteenMinutes)) {
+            lastNotifiedTimesRef.current.set(task.id, now.getTime());
+            playNotificationSound();
+            const timeLabel = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+            const text = hasCustomReminder
+              ? `🔔 Reminder: "${task.title}" is due at ${task.time}!`
+              : `⏳ "${task.title}" is due in less than 1 hour!`;
+
+            setNotifications((prev) => [
+              { id: Date.now() + task.id, text, time: timeLabel, read: false },
+              ...prev,
+            ]);
+
+            console.log("Attempting to trigger desktop notification for task:", task.title, "Permission:", Notification.permission);
+            if ("Notification" in window && Notification.permission === "granted") {
+              try {
+                const dueText = `Due ${formatDate(task.dueDate)} • ${formatTime(task.time)}`;
+                const priorityText = task.priority ? `\nPriority: ${task.priority}` : "";
+                const n = new Notification("Reminder", {
+                  body: `${task.title}\n${dueText}${priorityText}`,
+                });
+                n.onclick = () => {
+                  window.focus();
+                };
+                console.log("Desktop notification triggered successfully.");
+              } catch (err) {
+                console.error("Failed to construct Notification object:", err);
+              }
+            } else {
+              console.log("Notification not allowed or API not supported. Permission status:", Notification.permission);
+            }
+
+            addToast(text, hasCustomReminder ? "error" : "warning");
+          }
         }
       });
     };
@@ -138,27 +250,65 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
     return () => clearInterval(id);
   }, [tasks, settings.notificationsEnabled]);
 
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if (e.defaultPrevented) return;
+      if (e.key === "Escape") {
+        if (activeCategory !== "Dashboard") {
+          e.preventDefault();
+          setActiveCategory("Dashboard");
+        }
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, [activeCategory]);
+
   // ─── Task CRUD ──────────────────────────────────────────────────────────────
 
   const addTask = (newTask) => {
+    const createdTask = {
+      id: generateId(),
+      completed: false,
+      isFocused: newTask.isFocused || false,
+      subtasks: [],
+      priority: newTask.priority || settings.defaultPriority,
+      ...newTask,
+    };
     setTasks((prev) => [
       ...prev,
-      {
-        id: Date.now(),
-        completed: false,
-        isFocused: newTask.isFocused || false,
-        subtasks: [],
-        priority: newTask.priority || settings.defaultPriority,
-        ...newTask,
-      },
+      createdTask,
     ]);
     setIsModalOpen(false);
+    localStorage.removeItem("ftb_task_draft");
+
+    addToast(`Task "${createdTask.title}" created.`, "success", {
+      label: "Edit",
+      onClick: () => handleEdit(createdTask),
+    });
   };
 
   const updateTask = (updatedTask) => {
+    // Clear notification ref if reminder date/time or deadline has changed, so it can fire again
+    const hasReminderChanged =
+      updatedTask.reminderDate !== editingTask?.reminderDate ||
+      updatedTask.reminderTime !== editingTask?.reminderTime ||
+      updatedTask.dueDate !== editingTask?.dueDate ||
+      updatedTask.time !== editingTask?.time;
+
+    if (hasReminderChanged && editingTask) {
+      notifiedTasksRef.current.delete(editingTask.id);
+      lastNotifiedTimesRef.current.delete(editingTask.id);
+    }
+
     setTasks((prev) => prev.map((t) => (t.id === editingTask.id ? { ...t, ...updatedTask } : t)));
     setIsModalOpen(false);
     setEditingTask(null);
+    localStorage.removeItem("ftb_task_draft");
+
+    addToast(`Task "${updatedTask.title}" updated.`, "info");
   };
 
   // Inline update from bubble toolbar (partial patch by id)
@@ -169,8 +319,12 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
   const deleteTask = (taskId) => {
     const deleted = tasks.find((t) => t.id === taskId);
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
-    if (deleted) setNotifications((prev) => prev.filter((n) => !n.text.includes(deleted.title)));
+    if (deleted) {
+      setNotifications((prev) => prev.filter((n) => !n.text.includes(deleted.title)));
+      addToast(`Task "${deleted.title}" deleted.`, "warning");
+    }
     notifiedTasksRef.current.delete(taskId);
+    lastNotifiedTimesRef.current.delete(taskId);
   };
 
   const toggleTaskCompletion = (taskId) => {
@@ -189,8 +343,48 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
   };
 
   const handleEdit = (task) => {
+    const savedDraft = localStorage.getItem("ftb_task_draft");
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        if (draft.isEdit && draft.editingTaskId === task.id) {
+          setEditingTask({ ...task, ...draft, isDraft: true });
+          setIsModalOpen(true);
+          return;
+        }
+      } catch {
+        localStorage.removeItem("ftb_task_draft");
+      }
+    }
     setEditingTask(task);
     setIsModalOpen(true);
+  };
+
+  const handleOpenAddTask = () => {
+    const savedDraft = localStorage.getItem("ftb_task_draft");
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        if (draft.isEdit && draft.editingTaskId) {
+          const taskToEdit = tasks.find((t) => t.id === draft.editingTaskId);
+          if (taskToEdit) {
+            setEditingTask({ ...taskToEdit, ...draft, isDraft: true });
+          } else {
+            setEditingTask({ isDraft: true, ...draft });
+          }
+        } else {
+          setEditingTask({ isDraft: true, ...draft });
+        }
+        setIsModalOpen(true);
+      } catch {
+        localStorage.removeItem("ftb_task_draft");
+        setEditingTask(null);
+        setIsModalOpen(true);
+      }
+    } else {
+      setEditingTask(null);
+      setIsModalOpen(true);
+    }
   };
 
   const handleSaveSettings = (newSettings) => setSettings(newSettings);
@@ -259,7 +453,9 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
             setSelectedDate={setSelectedDate}
             priorityFilter={priorityFilter}
             setPriorityFilter={setPriorityFilter}
-            onAddTask={() => setIsModalOpen(true)}
+            onAddTask={handleOpenAddTask}
+            onOpenWhatsNew={() => setIsWhatsNewOpen(true)}
+            onOpenFeatures={() => setIsFeaturesOpen(true)}
           />
         )}
 
@@ -289,11 +485,11 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
               focusMode={focusMode}
               setFocusMode={setFocusMode}
               onEdit={handleEdit}
-              onDelete={deleteTask}
+              onDelete={handleDeleteRequest}
               onComplete={toggleTaskCompletion}
               onToggleFocus={toggleFocus}
               onUpdateTask={updateTaskById}
-              onAddTask={() => setIsModalOpen(true)}
+              onAddTask={handleOpenAddTask}
               onOpenProgress={handleOpenProgress}
             />
           )}
@@ -302,11 +498,12 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
           <FloatingDock
             tasks={tasks}
             theme={settings.theme}
-            onAddTask={() => setIsModalOpen(true)}
             onUpdateTask={updateTaskById}
             onComplete={toggleTaskCompletion}
             onEdit={handleEdit}
-            onDelete={deleteTask}
+            onDelete={handleDeleteRequest}
+            onCreateTask={addTask}
+            defaultPriority={settings.defaultPriority}
           />
         </div>
       </div>
@@ -320,6 +517,44 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
           defaultPriority={settings.defaultPriority}
         />
       )}
+      {/* Confirm Delete Modal */}
+      {taskToDelete && (
+        <ConfirmDeleteModal
+          task={taskToDelete}
+          theme={settings.theme}
+          onConfirm={() => {
+            deleteTask(taskToDelete.id);
+            setTaskToDelete(null);
+          }}
+          onCancel={() => setTaskToDelete(null)}
+        />
+      )}
+
+      {/* What's New Modal */}
+      {isWhatsNewOpen && (
+        <WhatsNewModal
+          onClose={() => setIsWhatsNewOpen(false)}
+          theme={settings.theme}
+        />
+      )}
+
+      {/* Features Modal */}
+      {isFeaturesOpen && (
+        <FeaturesModal
+          onClose={() => setIsFeaturesOpen(false)}
+          theme={settings.theme}
+        />
+      )}
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+      {/* Floating Task List Bubble */}
+      <FloatingTaskListBubble
+        tasks={tasks}
+        onEdit={handleEdit}
+        theme={settings.theme}
+      />
     </div>
   );
 }

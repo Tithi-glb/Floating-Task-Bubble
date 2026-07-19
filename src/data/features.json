@@ -1,0 +1,72 @@
+[
+  {
+    "category": "Task Management",
+    "items": [
+      {
+        "name": "Create Tasks",
+        "description": "Quickly create tasks with titles, descriptions, due dates, and times.",
+        "icon": "📝"
+      },
+      {
+        "name": "Edit Tasks",
+        "description": "Modify task details like description, priority, and checklist items on the fly.",
+        "icon": "✏️"
+      },
+      {
+        "name": "Delete Tasks",
+        "description": "Remove unwanted or duplicate tasks with confirm modal checks.",
+        "icon": "🗑️"
+      },
+      {
+        "name": "Floating Task Bubbles",
+        "description": "Visualize tasks as floating interactive bubbles containing water levels representing checklist progress.",
+        "icon": "🫧"
+      }
+    ]
+  },
+  {
+    "category": "Productivity",
+    "items": [
+      {
+        "name": "Focus Mode",
+        "description": "Maximize focus by filtering your workspace to focus tasks only.",
+        "icon": "⭐"
+      },
+      {
+        "name": "Smart Reminders",
+        "description": "Receive native desktop system notifications exactly when a task is due.",
+        "icon": "🔔"
+      },
+      {
+        "name": "Priority Queue",
+        "description": "Order your tasks automatically based on priority (Low, Medium, High).",
+        "icon": "⚡"
+      },
+      {
+        "name": "Keyboard Shortcuts",
+        "description": "Use global shortcuts like Escape to cancel editing and step back smoothly.",
+        "icon": "⌨️"
+      }
+    ]
+  },
+  {
+    "category": "Customization",
+    "items": [
+      {
+        "name": "Tooltips",
+        "description": "Hover over elements to see detailed descriptions without cluttering the screen.",
+        "icon": "💡"
+      },
+      {
+        "name": "Themes",
+        "description": "Switch seamlessly between light and dark mode preferences.",
+        "icon": "🌓"
+      },
+      {
+        "name": "Auto Save Draft",
+        "description": "Automatically preserve task draft input to prevent data loss.",
+        "icon": "💾"
+      }
+    ]
+  }
+]

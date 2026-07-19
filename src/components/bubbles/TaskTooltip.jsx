@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import Tooltip from "../Tooltip";
 
 // Helper for formatting creation date/time
 function formatCreation(createdAtStr) {
@@ -181,102 +182,122 @@ export default function TaskTooltip({
         <div className="flex flex-col gap-2.5 text-slate-800">
           <div className="flex items-center justify-between">
             <span className="font-extrabold text-sm">Edit Task</span>
-            <button
-              onClick={() => setIsEditing(false)}
-              className="text-slate-400 hover:text-slate-600 hover:scale-110 transition-all font-bold text-sm cursor-pointer w-6 h-6 flex items-center justify-center rounded-full hover:bg-slate-100"
-            >
-              ✕
-            </button>
+            <Tooltip content="Cancel editing">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="text-slate-400 hover:text-slate-600 hover:scale-110 transition-all font-bold text-sm cursor-pointer w-6 h-6 flex items-center justify-center rounded-full hover:bg-slate-100"
+              >
+                ✕
+              </button>
+            </Tooltip>
           </div>
 
           <div className="flex flex-col gap-1">
             <label className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Title</label>
-            <input
-              type="text"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+            <Tooltip content="Edit task title" className="w-full">
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="w-full p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </Tooltip>
           </div>
 
           <div className="flex flex-col gap-1">
             <label className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Description</label>
-            <textarea
-              value={editDesc}
-              onChange={(e) => setEditDesc(e.target.value)}
-              className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 h-14 resize-none"
-            />
+            <Tooltip content="Edit task description" className="w-full">
+              <textarea
+                value={editDesc}
+                onChange={(e) => setEditDesc(e.target.value)}
+                className="w-full p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 h-14 resize-none"
+              />
+            </Tooltip>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
               <label className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Priority</label>
-              <select
-                value={editPriority}
-                onChange={(e) => setEditPriority(e.target.value)}
-                className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-xs font-semibold focus:outline-none"
-              >
-                <option value="Low">🌱 Low</option>
-                <option value="Medium">⚡ Medium</option>
-                <option value="High">🔥 High</option>
-              </select>
+              <Tooltip content="Select task priority" className="w-full">
+                <select
+                  value={editPriority}
+                  onChange={(e) => setEditPriority(e.target.value)}
+                  className="w-full p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-xs font-semibold focus:outline-none"
+                >
+                  <option value="Low">🌱 Low</option>
+                  <option value="Medium">⚡ Medium</option>
+                  <option value="High">🔥 High</option>
+                </select>
+              </Tooltip>
             </div>
 
             <div className="flex flex-col gap-1">
               <label className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Due Date</label>
-              <input
-                type="date"
-                value={editDueDate}
-                onChange={(e) => setEditDueDate(e.target.value)}
-                className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-[11px] focus:outline-none"
-              />
+              <Tooltip content="Select task due date" className="w-full">
+                <input
+                  type="date"
+                  value={editDueDate}
+                  onChange={(e) => setEditDueDate(e.target.value)}
+                  className="w-full p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-[11px] focus:outline-none"
+                />
+              </Tooltip>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
               <label className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Due Time</label>
-              <input
-                type="time"
-                value={editTime}
-                onChange={(e) => setEditTime(e.target.value)}
-                className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-xs focus:outline-none"
-              />
+              <Tooltip content="Select task due time" className="w-full">
+                <input
+                  type="time"
+                  value={editTime}
+                  onChange={(e) => setEditTime(e.target.value)}
+                  className="w-full p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-xs focus:outline-none"
+                />
+              </Tooltip>
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Reminder Time</label>
-              <input
-                type="time"
-                value={editReminderTime}
-                onChange={(e) => setEditReminderTime(e.target.value)}
-                className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-xs focus:outline-none"
-              />
+              <Tooltip content="Select reminder time" className="w-full">
+                <input
+                  type="time"
+                  value={editReminderTime}
+                  onChange={(e) => setEditReminderTime(e.target.value)}
+                  className="w-full p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-xs focus:outline-none"
+                />
+              </Tooltip>
             </div>
           </div>
 
           <div className="flex flex-col gap-1">
             <label className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Reminder Date</label>
-            <input
-              type="date"
-              value={editReminderDate}
-              onChange={(e) => setEditReminderDate(e.target.value)}
-              className="p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-[11px] focus:outline-none"
-            />
+            <Tooltip content="Select reminder date" className="w-full">
+              <input
+                type="date"
+                value={editReminderDate}
+                onChange={(e) => setEditReminderDate(e.target.value)}
+                className="w-full p-2 rounded-xl bg-slate-100/80 border border-slate-200/60 text-slate-800 text-[11px] focus:outline-none"
+              />
+            </Tooltip>
           </div>
 
           <div className="flex gap-2 mt-1 shrink-0">
-            <button
-              onClick={() => setIsEditing(false)}
-              className="flex-1 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold transition cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveEdit}
-              className="flex-1 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold transition cursor-pointer"
-            >
-              Save
-            </button>
+            <Tooltip content="Discard edits and exit" className="flex-1">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="w-full py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold transition cursor-pointer"
+              >
+                Cancel
+              </button>
+            </Tooltip>
+            <Tooltip content="Save task changes" className="flex-1">
+              <button
+                onClick={handleSaveEdit}
+                className="w-full py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold transition cursor-pointer"
+              >
+                Save
+              </button>
+            </Tooltip>
           </div>
         </div>
       ) : (
@@ -295,22 +316,23 @@ export default function TaskTooltip({
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                  task.priority === "High"
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${task.priority === "High"
                     ? "bg-red-50 border-red-200 text-red-700"
                     : task.priority === "Low"
                       ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                       : "bg-orange-50 border-orange-200 text-orange-700"
-                }`}
+                  }`}
               >
                 {task.priority || "Medium"}
               </span>
-              <button
-                onClick={onClose}
-                className="text-slate-400 hover:text-slate-600 hover:scale-110 transition-all font-bold text-sm cursor-pointer w-6 h-6 flex items-center justify-center rounded-full hover:bg-slate-100"
-              >
-                ✕
-              </button>
+              <Tooltip content="Close details bubble">
+                <button
+                  onClick={onClose}
+                  className="text-slate-400 hover:text-slate-600 hover:scale-110 transition-all font-bold text-sm cursor-pointer w-6 h-6 flex items-center justify-center rounded-full hover:bg-slate-100"
+                >
+                  ✕
+                </button>
+              </Tooltip>
             </div>
           </div>
 
@@ -340,26 +362,29 @@ export default function TaskTooltip({
                   className="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-slate-50 border border-slate-100"
                 >
                   <label className="flex items-center gap-2 cursor-pointer min-w-0 flex-grow select-none">
-                    <input
-                      type="checkbox"
-                      checked={st.done}
-                      onChange={() => handleToggleSubtask(st.id)}
-                      className="w-3.5 h-3.5 rounded text-indigo-500 accent-indigo-500"
-                    />
+                    <Tooltip content={st.done ? "Mark as incomplete" : "Mark as complete"}>
+                      <input
+                        type="checkbox"
+                        checked={st.done}
+                        onChange={() => handleToggleSubtask(st.id)}
+                        className="w-3.5 h-3.5 rounded text-indigo-500 accent-indigo-500"
+                      />
+                    </Tooltip>
                     <span
-                      className={`text-[11px] truncate leading-tight ${
-                        st.done ? "line-through text-slate-400" : "text-slate-700"
-                      }`}
+                      className={`text-[11px] truncate leading-tight ${st.done ? "line-through text-slate-400" : "text-slate-700"
+                        }`}
                     >
                       {st.text}
                     </span>
                   </label>
-                  <button
-                    onClick={() => handleDeleteSubtask(st.id)}
-                    className="text-[10px] font-bold text-slate-400 hover:text-red-500 cursor-pointer px-1"
-                  >
-                    ✕
-                  </button>
+                  <Tooltip content="Delete subtask">
+                    <button
+                      onClick={() => handleDeleteSubtask(st.id)}
+                      className="text-[10px] font-bold text-slate-400 hover:text-red-500 cursor-pointer px-1"
+                    >
+                      ✕
+                    </button>
+                  </Tooltip>
                 </div>
               ))}
               {totalSubs === 0 && (
@@ -369,21 +394,25 @@ export default function TaskTooltip({
 
             {/* Quick Add Subtask */}
             <div className="flex gap-1.5 mt-1 shrink-0">
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Add step..."
-                value={newSubText}
-                onChange={(e) => setNewSubText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAddSubtask()}
-                className="flex-1 px-2.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-[11px] placeholder-slate-400 focus:outline-none"
-              />
-              <button
-                onClick={handleAddSubtask}
-                className="px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-[11px] transition cursor-pointer"
-              >
-                Add
-              </button>
+              <Tooltip content="Enter step text" className="flex-1">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="Add step..."
+                  value={newSubText}
+                  onChange={(e) => setNewSubText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddSubtask()}
+                  className="w-full px-2.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-[11px] placeholder-slate-400 focus:outline-none"
+                />
+              </Tooltip>
+              <Tooltip content="Add step to checklist">
+                <button
+                  onClick={handleAddSubtask}
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-[11px] transition cursor-pointer"
+                >
+                  Add
+                </button>
+              </Tooltip>
             </div>
           </div>
 

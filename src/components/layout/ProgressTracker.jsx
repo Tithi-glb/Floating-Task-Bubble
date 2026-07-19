@@ -112,9 +112,9 @@ const PieRing = ({ percentage, theme }) => {
 };
 
 const PRIORITY_BADGE = {
-  High:   "bg-red-100 text-red-700 border-red-200",
+  High: "bg-red-100 text-red-700 border-red-200",
   Medium: "bg-orange-100 text-orange-700 border-orange-200",
-  Low:    "bg-emerald-100 text-emerald-700 border-emerald-200",
+  Low: "bg-emerald-100 text-emerald-700 border-emerald-200",
 };
 
 function TaskCard({ task, theme, expandedTaskId, setExpandedTaskId }) {
@@ -290,8 +290,8 @@ export default function ProgressTracker({ tasks, theme, onClose }) {
 
   const TABS = [
     { key: "completed", label: "🟢 Completed", count: todayCompleted.length },
-    { key: "pending",   label: "🟡 Pending",   count: todayPending.length },
-    { key: "inprogress",label: "🔵 In Progress",count: todayInProgress.length },
+    { key: "pending", label: "🟡 Pending", count: todayPending.length },
+    { key: "inprogress", label: "🔵 In Progress", count: todayInProgress.length },
   ];
   const tabTaskMap = { completed: todayCompleted, pending: todayPending, inprogress: todayInProgress };
 
@@ -437,9 +437,9 @@ export default function ProgressTracker({ tasks, theme, onClose }) {
           </div>
           <div className="grid grid-cols-4 gap-2 text-center shrink-0">
             {[
-              { label: "Total",    value: selectedProgress.total, cls: theme === "dark" ? "bg-slate-800" : "bg-slate-100" },
-              { label: "Done",     value: selectedProgress.completed, cls: theme === "dark" ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-600" },
-              { label: "Pending",  value: selectedProgress.pending, cls: theme === "dark" ? "bg-amber-900/30 text-amber-400" : "bg-amber-50 text-amber-600" },
+              { label: "Total", value: selectedProgress.total, cls: theme === "dark" ? "bg-slate-800" : "bg-slate-100" },
+              { label: "Done", value: selectedProgress.completed, cls: theme === "dark" ? "bg-emerald-900/30 text-emerald-400" : "bg-emerald-50 text-emerald-600" },
+              { label: "Pending", value: selectedProgress.pending, cls: theme === "dark" ? "bg-amber-900/30 text-amber-400" : "bg-amber-50 text-amber-600" },
               { label: "Progress", value: `${selectedProgress.percentage}%`, cls: theme === "dark" ? "bg-[#4F7CFF]/20 text-[#4F7CFF]" : "bg-[#4F7CFF]/10 text-[#4F7CFF]" },
             ].map((s) => (
               <div key={s.label} className={`p-2 rounded-xl ${s.cls}`}>
@@ -486,7 +486,7 @@ export default function ProgressTracker({ tasks, theme, onClose }) {
           <div className="flex flex-wrap items-center gap-4">
             {[
               { label: "Start", val: customStart, set: setCustomStart, max: customEnd || todayStr },
-              { label: "End",   val: customEnd,   set: setCustomEnd,   min: customStart, max: todayStr },
+              { label: "End", val: customEnd, set: setCustomEnd, min: customStart, max: todayStr },
             ].map((p) => (
               <div key={p.label} className="flex items-center gap-2">
                 <label className={`text-xs font-bold uppercase ${mutedText}`}>{p.label}:</label>
@@ -506,10 +506,10 @@ export default function ProgressTracker({ tasks, theme, onClose }) {
           </div>
           <div className="flex items-center gap-6 text-center">
             {[
-              { label: "Total",           value: historyStats.total,           color: textColor },
-              { label: "Completed",       value: historyStats.completed,       color: "text-emerald-500" },
-              { label: "Pending",         value: historyStats.pending,         color: "text-amber-500" },
-              { label: "Completion Rate", value: `${historyStats.percentage}%`,color: "text-[#4F7CFF]" },
+              { label: "Total", value: historyStats.total, color: textColor },
+              { label: "Completed", value: historyStats.completed, color: "text-emerald-500" },
+              { label: "Pending", value: historyStats.pending, color: "text-amber-500" },
+              { label: "Completion Rate", value: `${historyStats.percentage}%`, color: "text-[#4F7CFF]" },
             ].map((s) => (
               <div key={s.label}>
                 <p className={`text-[10px] font-bold uppercase ${mutedText}`}>{s.label}</p>

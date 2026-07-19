@@ -1,20 +1,21 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Tooltip from "../Tooltip";
 
 const ACTIONS = [
-  { key: "edit",       icon: "✏️",  label: "Edit Task" },
-  { key: "complete",   icon: "✓",   label: "Mark Complete" },
-  { key: "reminder",   icon: "🔔",  label: "Set Reminder" },
-  { key: "priority",   icon: "🔥",  label: "Change Priority" },
-  { key: "progress",   icon: "📊",  label: "View Progress" },
-  { key: "pin",        icon: "📌",  label: "Pin Task" },
-  { key: "delete",     icon: "🗑️",  label: "Delete Task" },
+  { key: "edit", icon: "✏️", label: "Edit Task" },
+  { key: "complete", icon: "✓", label: "Mark Complete" },
+  { key: "reminder", icon: "🔔", label: "Set Reminder" },
+  { key: "priority", icon: "🔥", label: "Change Priority" },
+  { key: "progress", icon: "📊", label: "View Progress" },
+  { key: "pin", icon: "📌", label: "Pin Task" },
+  { key: "delete", icon: "🗑️", label: "Delete Task" },
 ];
 
 const PRIORITIES = [
-  { label: "🔥 High",   value: "High" },
+  { label: "🔥 High", value: "High" },
   { label: "⚡ Medium", value: "Medium" },
-  { label: "🌱 Low",    value: "Low" },
+  { label: "🌱 Low", value: "Low" },
 ];
 
 export default function BubbleToolbar({
@@ -48,9 +49,7 @@ export default function BubbleToolbar({
         onComplete(task.id);
         break;
       case "delete":
-        if (window.confirm("Are you sure you want to delete this task?")) {
-          onDelete(task.id);
-        }
+        onDelete(task.id);
         break;
       case "pin":
         onToggleFocus(task.id);
@@ -87,6 +86,13 @@ export default function BubbleToolbar({
     setReminderDate("");
     setReminderTime("");
     setSubMenu(null);
+  };
+
+  const handleReminderKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSaveReminder(e);
+    }
   };
 
   // Get positioning styles based on dynamic toolbar positioning
@@ -126,22 +132,22 @@ export default function BubbleToolbar({
             }}
           >
             {ACTIONS.map((action) => (
-              <button
-                key={action.key}
-                onClick={(e) => handleAction(action.key, e)}
-                title={action.label}
-                className={`relative w-8 h-8 flex items-center justify-center rounded-xl text-sm transition-all duration-150 cursor-pointer select-none
-                  ${subMenu === action.key
-                    ? "bg-white/20 scale-110"
-                    : action.key === "delete"
-                      ? "hover:bg-red-500/30 text-red-200"
-                      : action.key === "complete"
-                        ? "hover:bg-emerald-500/30 text-emerald-200"
-                        : "hover:bg-white/10 text-white"
-                  }`}
-              >
-                <span className="text-base leading-none">{action.icon}</span>
-              </button>
+              <Tooltip key={action.key} content={action.label}>
+                <button
+                  onClick={(e) => handleAction(action.key, e)}
+                  className={`relative w-8 h-8 flex items-center justify-center rounded-xl text-sm transition-all duration-150 cursor-pointer select-none
+                    ${subMenu === action.key
+                      ? "bg-white/20 scale-110"
+                      : action.key === "delete"
+                        ? "hover:bg-red-500/30 text-red-200"
+                        : action.key === "complete"
+                          ? "hover:bg-emerald-500/30 text-emerald-200"
+                          : "hover:bg-white/10 text-white"
+                    }`}
+                >
+                  <span className="text-base leading-none">{action.icon}</span>
+                </button>
+              </Tooltip>
             ))}
           </div>
 
@@ -164,18 +170,19 @@ export default function BubbleToolbar({
                   <div className="flex flex-col gap-1 text-white">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-white/40 mb-1.5">Priority</p>
                     {PRIORITIES.map((p) => (
-                      <button
-                        key={p.value}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onUpdateTask(task.id, { priority: p.value });
-                          setSubMenu(null);
-                        }}
-                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer
-                          ${task.priority === p.value ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/5 hover:text-white"}`}
-                      >
-                        {p.label}
-                      </button>
+                      <Tooltip key={p.value} content={`Set ${p.value} priority`} className="w-full">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onUpdateTask(task.id, { priority: p.value });
+                            setSubMenu(null);
+                          }}
+                          className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer
+                            ${task.priority === p.value ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/5 hover:text-white"}`}
+                        >
+                          {p.label}
+                        </button>
+                      </Tooltip>
                     ))}
                   </div>
                 )}
@@ -183,33 +190,43 @@ export default function BubbleToolbar({
                 {subMenu === "reminder" && (
                   <div className="flex flex-col gap-2 text-xs text-white">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-white/40">Reminder</p>
-                    <input
-                      type="date"
-                      value={reminderDate}
-                      min={new Date().toISOString().split("T")[0]}
-                      onChange={(e) => setReminderDate(e.target.value)}
-                      className="w-full px-2 py-1.5 rounded-lg bg-white/10 border border-white/10 text-white text-xs focus:outline-none"
-                    />
-                    <input
-                      type="time"
-                      value={reminderTime}
-                      onChange={(e) => setReminderTime(e.target.value)}
-                      className="w-full px-2 py-1.5 rounded-lg bg-white/10 border border-white/10 text-white text-xs focus:outline-none"
-                    />
+                    <Tooltip content="Set reminder date" className="w-full">
+                      <input
+                        type="date"
+                        value={reminderDate}
+                        min={new Date().toISOString().split("T")[0]}
+                        onChange={(e) => setReminderDate(e.target.value)}
+                        onKeyDown={handleReminderKeyDown}
+                        className="w-full px-2 py-1.5 rounded-lg bg-white/10 border border-white/10 text-white text-xs focus:outline-none"
+                      />
+                    </Tooltip>
+                    <Tooltip content="Set reminder time" className="w-full">
+                      <input
+                        type="time"
+                        value={reminderTime}
+                        onChange={(e) => setReminderTime(e.target.value)}
+                        onKeyDown={handleReminderKeyDown}
+                        className="w-full px-2 py-1.5 rounded-lg bg-white/10 border border-white/10 text-white text-xs focus:outline-none"
+                      />
+                    </Tooltip>
                     <div className="flex gap-1.5 mt-1">
-                      <button
-                        onClick={handleSaveReminder}
-                        className="flex-1 py-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-bold transition cursor-pointer"
-                      >
-                        Save
-                      </button>
-                      {(task.reminderDate || task.reminderTime) && (
+                      <Tooltip content="Save reminder settings" className="flex-1">
                         <button
-                          onClick={handleRemoveReminder}
-                          className="px-2 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-200 hover:text-white text-xs font-bold transition cursor-pointer"
+                          onClick={handleSaveReminder}
+                          className="w-full py-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-bold transition cursor-pointer"
                         >
-                          ✕
+                          Save
                         </button>
+                      </Tooltip>
+                      {(task.reminderDate || task.reminderTime) && (
+                        <Tooltip content="Clear reminder settings">
+                          <button
+                            onClick={handleRemoveReminder}
+                            className="px-2 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-200 hover:text-white text-xs font-bold transition cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </Tooltip>
                       )}
                     </div>
                   </div>

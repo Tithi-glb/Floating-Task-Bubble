@@ -1,0 +1,21 @@
+[
+  {
+    "version": "1.2.0",
+    "date": "25 July 2026",
+    "changes": [
+      "Added Reminder System",
+      "Added Focus Mode Improvements",
+      "Added Keyboard Shortcuts",
+      "Added Internal Notifications"
+    ]
+  },
+  {
+    "version": "1.1.0",
+    "date": "10 July 2026",
+    "changes": [
+      "Added Floating Task Bubbles",
+      "Added Custom Priority Colors",
+      "Added Auto Save Draft Mode"
+    ]
+  }
+]
