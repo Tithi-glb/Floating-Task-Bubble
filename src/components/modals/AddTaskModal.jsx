@@ -39,7 +39,10 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
   const [isReminderDateUserEdited, setIsReminderDateUserEdited] = useState(
     editingTask ? (editingTask.isReminderDateUserEdited ?? Boolean(editingTask.reminderDate)) : false
   );
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isEditMode = !!(editingTask && (!editingTask.isDraft || editingTask.isEdit));
 
   const handleDueTimeChange = (newDueTime) => {
     setTime(newDueTime);
@@ -67,7 +70,7 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
 
   useEffect(() => {
     const draftData = {
-      isEdit: Boolean(editingTask && (!editingTask.isDraft || editingTask.isEdit)),
+      isEdit: isEditMode,
       editingTaskId: editingTask?.isDraft ? (editingTask.editingTaskId || null) : (editingTask?.id || null),
       title,
       description,
@@ -187,7 +190,7 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
     }
 
     onCreate({
-      ...(editingTask && { id: editingTask.id }),
+      ...(isEditMode && { id: editingTask.id }),
 
       title: title.trim(),
       description: description.trim(),
@@ -201,7 +204,7 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
       completed: editingTask?.completed || false,
       subtasks,
       color: editingTask?.color || "#60A5FA",
-      ...(editingTask ? { updatedAt: new Date().toISOString() } : { createdAt: new Date().toISOString() }),
+      ...(isEditMode ? { updatedAt: new Date().toISOString() } : { createdAt: new Date().toISOString() }),
     });
   };
 
@@ -229,7 +232,7 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
         <div className="flex items-center justify-between mb-5 shrink-0">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-slate-800">
-              {editingTask && (!editingTask.isDraft || editingTask.isEdit) ? "Edit Task" : "New Floating Task"}
+              {isEditMode ? "Edit Task" : "New Floating Task"}
             </h2>
             {localStorage.getItem("ftb_task_draft") && (
               <Tooltip content="Discard draft and reset">
@@ -352,6 +355,8 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
               </Tooltip>
             </div>
           </div>
+
+
 
           <div>
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Priority</label>
@@ -484,13 +489,13 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
               Cancel
             </button>
           </Tooltip>
-          <Tooltip content={editingTask && (!editingTask.isDraft || editingTask.isEdit) ? "Save changes" : "Create Bubble"} className="flex-1">
+          <Tooltip content={isEditMode ? "Save changes" : "Create Bubble"} className="flex-1">
             <button
               onClick={handleSubmit}
               className="w-full py-3 rounded-xl text-white font-semibold text-sm shadow-lg shadow-[#4F7CFF]/25 transition hover:brightness-110 cursor-pointer"
               style={{ background: "linear-gradient(135deg, #4F7CFF, #7c3aed)" }}
             >
-              {editingTask && (!editingTask.isDraft || editingTask.isEdit) ? "Save Changes" : "Create Bubble 🫧"}
+              {isEditMode ? "Save Changes" : "Create Bubble 🫧"}
             </button>
           </Tooltip>
         </div>

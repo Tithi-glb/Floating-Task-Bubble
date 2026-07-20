@@ -1,5 +1,7 @@
 import { useState } from "react";
 import Tooltip from "../Tooltip";
+import { useNotifications } from "../../hooks/useNotifications";
+import NotificationPanel from "../NotificationPanel";
 
 function Navbar({
   theme,
@@ -9,12 +11,11 @@ function Navbar({
   userProfile,
   focusMode,
   setFocusMode,
-  notifications,
-  setNotifications,
   activeCategory,
   setActiveCategory,
   onLogout,
 }) {
+  const { unreadCount } = useNotifications();
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
 
   // Fallback profile
@@ -22,20 +23,6 @@ function Navbar({
     name: "Guest",
     role: "Viewer",
     avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=guest",
-  };
-
-  // Unread notification count
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const handleMarkAllRead = (e) => {
-    e.stopPropagation();
-    if (setNotifications) {
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    }
-  };
-
-  const handleToggleNotif = () => {
-    setShowNotifDropdown((v) => !v);
   };
 
   return (
@@ -137,101 +124,31 @@ function Navbar({
           </button>
         </Tooltip>
 
-        {/* Notifications Icon with Dropdown */}
+        {/* Notifications Icon with Dropdown Panel */}
         <div className="relative">
           <Tooltip content="View notifications">
-            <div
-              onClick={handleToggleNotif}
-              className={`relative cursor-pointer p-2 rounded-xl transition flex items-center justify-center ${theme === "dark" ? "bg-slate-800/60 hover:bg-slate-700/80" : "hover:bg-white/50"
-                }`}
+            <button
+              onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+              className={`bubble-btn flex items-center justify-center relative focus:outline-none ${
+                theme === "dark"
+                  ? "bg-slate-800/70 border-slate-700 text-slate-100 hover:bg-slate-700 hover:text-white"
+                  : "bg-white/50 border-white/60 text-slate-600 hover:bg-[#EEF4FF] hover:border-[#4F7CFF]/50 hover:text-[#4F7CFF]"
+              }`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-5 h-5 text-slate-600"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
-                />
-              </svg>
+              <span>🔔</span>
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-pink-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center border border-white shadow-sm animate-pulse">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center border border-white shadow-sm animate-pulse">
                   {unreadCount}
                 </span>
               )}
-            </div>
+            </button>
           </Tooltip>
 
-          {/* Premium Notifications Dropdown */}
-          {showNotifDropdown && (
-            <div className={`absolute right-0 mt-3 w-80 backdrop-blur-2xl rounded-2xl shadow-2xl p-4 z-50 animate-fadeIn ${theme === "dark"
-              ? "bg-slate-950/95 border border-slate-700"
-              : "bg-white/90 border border-slate-200/60"
-              }`}>
-              <div className={`flex items-center justify-between pb-2.5 mb-2 ${theme === "dark" ? "border-b border-slate-700" : "border-b border-slate-100"
-                }`}>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-extrabold text-slate-800">Alerts</span>
-                  {unreadCount > 0 && (
-                    <span className="bg-pink-500/10 text-pink-600 text-[10px] font-black px-1.5 py-0.5 rounded-full">
-                      {unreadCount} New
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-3">
-                  {unreadCount > 0 && (
-                    <Tooltip content="Mark all read">
-                      <button
-                        onClick={handleMarkAllRead}
-                        className="text-[10px] font-extrabold text-[#4F7CFF] hover:underline cursor-pointer"
-                      >
-                        Mark all read
-                      </button>
-                    </Tooltip>
-                  )}
-                  <Tooltip content="Close alerts">
-                    <button
-                      onClick={() => setShowNotifDropdown(false)}
-                      className="p-1 rounded-full hover:bg-slate-100/50 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </Tooltip>
-                </div>
-              </div>
-
-              <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-                {notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className={`p-2.5 rounded-xl border transition-all text-xs flex flex-col gap-1 ${notif.read
-                      ? "bg-slate-50/50 border-slate-100 text-slate-500"
-                      : "bg-red-50/60 border-red-100 text-red-700 font-medium"
-                      }`}
-                  >
-                    <div className="flex justify-between items-start gap-1">
-                      <span className="leading-tight">{notif.text}</span>
-                      <span className="text-[9px] text-slate-400 font-bold shrink-0">{notif.time}</span>
-                    </div>
-                  </div>
-                ))}
-
-                {notifications.length === 0 && (
-                  <div className="text-center py-6 text-slate-400 text-xs flex flex-col items-center gap-1">
-                    <span>🫧</span>
-                    <span>No notifications yet.</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          <NotificationPanel 
+            isOpen={showNotifDropdown} 
+            onClose={() => setShowNotifDropdown(false)} 
+            theme={theme} 
+          />
         </div>
 
         {/* Vertical Divider */}

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/layout/Navbar";
 import Sidebar from "../components/layout/Sidebar";
+import { NotificationProvider } from "../context/NotificationContext";
 import PreviewPanel from "../components/layout/PreviewPanel";
 import SettingsPanel from "../components/layout/SettingsPanel";
 import AddTaskModal from "../components/modals/AddTaskModal";
@@ -39,32 +40,33 @@ function formatTime(timeStr) {
 
 function parseLocalDateTime(dateStr, timeStr) {
   if (!dateStr) return new Date(NaN);
-  const [year, month, day] = dateStr.split("-").map(Number);
+  const separator = dateStr.includes("/") ? "/" : "-";
+  const parts = dateStr.split(separator).map(Number);
+  if (parts.some(isNaN) || parts.length < 3) return new Date(NaN);
+
+  let year, month, day;
+  if (parts[0] > 1000) {
+    [year, month, day] = parts;
+  } else if (parts[2] > 1000) {
+    year = parts[2];
+    if (parts[0] > 12) {
+      month = parts[1];
+      day = parts[0];
+    } else if (parts[1] > 12) {
+      month = parts[0];
+      day = parts[1];
+    } else {
+      month = parts[1];
+      day = parts[0];
+    }
+  } else {
+    [year, month, day] = parts;
+  }
+
   const [hour, minute] = (timeStr || "00:00").split(":").map(Number);
+  if (isNaN(hour) || isNaN(minute)) return new Date(NaN);
   return new Date(year, month - 1, day, hour, minute, 0, 0);
 }
-
-// ─── Notification chime ───────────────────────────────────────────────────────
-const playNotificationSound = () => {
-  try {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = audioCtx.currentTime;
-    const osc1 = audioCtx.createOscillator();
-    const gain1 = audioCtx.createGain();
-    osc1.type = "sine"; osc1.frequency.setValueAtTime(587.33, now);
-    osc1.connect(gain1); gain1.connect(audioCtx.destination);
-    gain1.gain.setValueAtTime(0.2, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-    osc1.start(now); osc1.stop(now + 0.4);
-    const osc2 = audioCtx.createOscillator();
-    const gain2 = audioCtx.createGain();
-    osc2.type = "sine"; osc2.frequency.setValueAtTime(880, now + 0.12);
-    osc2.connect(gain2); gain2.connect(audioCtx.destination);
-    gain2.gain.setValueAtTime(0.2, now + 0.12);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.52);
-    osc2.start(now + 0.12); osc2.stop(now + 0.52);
-  } catch { /* ignore */ }
-};
 
 const generateId = () => Date.now();
 
@@ -104,9 +106,7 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
   const [activeCategory, setActiveCategory] = useState("Dashboard");
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [priorityFilter, setPriorityFilter] = useState("all");
-  const [notifications, setNotifications] = useState([]);
-  const notifiedTasksRef = useRef(new Set());
-  const lastNotifiedTimesRef = useRef(new Map());
+
   const [toasts, setToasts] = useState([]);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [isWhatsNewOpen, setIsWhatsNewOpen] = useState(false);
@@ -161,94 +161,7 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
     if (!propUserProfile && !fallbackUserProfile) navigate("/", { replace: true });
   }, [navigate, propUserProfile, fallbackUserProfile]);
 
-  // Request notification permission
-  useEffect(() => {
-    if ("Notification" in window) {
-      const ask = () => {
-        if (Notification.permission === "default") {
-          try {
-            const result = Notification.requestPermission((perm) => {
-              console.log("Notification permission via callback:", perm);
-            });
-            if (result && typeof result.then === "function") {
-              result.then((perm) => {
-                console.log("Notification permission via promise:", perm);
-              });
-            }
-          } catch (e) {
-            console.error("Error requesting notification permission:", e);
-          }
-        }
-      };
-      ask();
-      window.addEventListener("click", ask, { once: true });
-      return () => window.removeEventListener("click", ask);
-    }
-  }, []);
 
-  // Deadline notifications
-  useEffect(() => {
-    if (!settings.notificationsEnabled) return;
-    const check = () => {
-      const now = new Date();
-      tasks.forEach((task) => {
-        if (task.completed || !task.dueDate || !task.time) return;
-        const dl = parseLocalDateTime(task.dueDate, task.time);
-        if (isNaN(dl.getTime())) return;
-
-        const hasCustomReminder = !!(task.reminderDate && task.reminderTime);
-        const reminderDateTime = hasCustomReminder
-          ? parseLocalDateTime(task.reminderDate, task.reminderTime)
-          : new Date(dl.getTime() - 60 * 60 * 1000);
-
-        if (isNaN(reminderDateTime.getTime())) return;
-
-        if (now >= reminderDateTime) {
-          const lastNotified = lastNotifiedTimesRef.current.get(task.id);
-          const fifteenMinutes = 15 * 60 * 1000;
-
-          if (!lastNotified || (now.getTime() - lastNotified >= fifteenMinutes)) {
-            lastNotifiedTimesRef.current.set(task.id, now.getTime());
-            playNotificationSound();
-            const timeLabel = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-            const text = hasCustomReminder
-              ? `🔔 Reminder: "${task.title}" is due at ${task.time}!`
-              : `⏳ "${task.title}" is due in less than 1 hour!`;
-
-            setNotifications((prev) => [
-              { id: Date.now() + task.id, text, time: timeLabel, read: false },
-              ...prev,
-            ]);
-
-            console.log("Attempting to trigger desktop notification for task:", task.title, "Permission:", Notification.permission);
-            if ("Notification" in window && Notification.permission === "granted") {
-              try {
-                const dueText = `Due ${formatDate(task.dueDate)} • ${formatTime(task.time)}`;
-                const priorityText = task.priority ? `\nPriority: ${task.priority}` : "";
-                const n = new Notification("Reminder", {
-                  body: `${task.title}\n${dueText}${priorityText}`,
-                });
-                n.onclick = () => {
-                  window.focus();
-                };
-                console.log("Desktop notification triggered successfully.");
-              } catch (err) {
-                console.error("Failed to construct Notification object:", err);
-              }
-            } else {
-              console.log("Notification not allowed or API not supported. Permission status:", Notification.permission);
-            }
-
-            addToast(text, hasCustomReminder ? "error" : "warning");
-          }
-        }
-      });
-    };
-    check();
-    const id = setInterval(check, 10000);
-    return () => clearInterval(id);
-  }, [tasks, settings.notificationsEnabled]);
 
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
@@ -282,6 +195,7 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
       createdTask,
     ]);
     setIsModalOpen(false);
+    setEditingTask(null);
     localStorage.removeItem("ftb_task_draft");
 
     addToast(`Task "${createdTask.title}" created.`, "success", {
@@ -291,18 +205,6 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
   };
 
   const updateTask = (updatedTask) => {
-    // Clear notification ref if reminder date/time or deadline has changed, so it can fire again
-    const hasReminderChanged =
-      updatedTask.reminderDate !== editingTask?.reminderDate ||
-      updatedTask.reminderTime !== editingTask?.reminderTime ||
-      updatedTask.dueDate !== editingTask?.dueDate ||
-      updatedTask.time !== editingTask?.time;
-
-    if (hasReminderChanged && editingTask) {
-      notifiedTasksRef.current.delete(editingTask.id);
-      lastNotifiedTimesRef.current.delete(editingTask.id);
-    }
-
     setTasks((prev) => prev.map((t) => (t.id === editingTask.id ? { ...t, ...updatedTask } : t)));
     setIsModalOpen(false);
     setEditingTask(null);
@@ -320,19 +222,22 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
     const deleted = tasks.find((t) => t.id === taskId);
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
     if (deleted) {
-      setNotifications((prev) => prev.filter((n) => !n.text.includes(deleted.title)));
       addToast(`Task "${deleted.title}" deleted.`, "warning");
     }
-    notifiedTasksRef.current.delete(taskId);
-    lastNotifiedTimesRef.current.delete(taskId);
   };
 
   const toggleTaskCompletion = (taskId) => {
     const today = new Date().toISOString().split("T")[0];
+    const nowTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     setTasks((prev) =>
       prev.map((t) =>
         t.id === taskId
-          ? { ...t, completed: !t.completed, completedDate: !t.completed ? today : undefined }
+          ? {
+            ...t,
+            completed: !t.completed,
+            completedDate: !t.completed ? today : undefined,
+            completedTime: !t.completed ? nowTime : undefined,
+          }
           : t
       )
     );
@@ -421,141 +326,141 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
     : "bg-gradient-to-br from-[#F0F4FF] via-white to-[#F5ECFF] text-[#0F172A]";
 
   return (
-    <div className={`h-screen w-screen flex flex-col font-sans select-none overflow-hidden ${isDesktopMode ? "bg-transparent text-[#0F172A]" : appBg}`}>
+    <NotificationProvider tasks={tasks}>
+      <div className={`h-screen w-screen flex flex-col font-sans select-none overflow-hidden ${isDesktopMode ? "bg-transparent text-[#0F172A]" : appBg}`}>
 
-      {/* Navbar */}
-      {!focusMode && !isDesktopMode && (
-        <Navbar
-          theme={settings.theme}
-          setTheme={(t) => setSettings((prev) => ({ ...prev, theme: t }))}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          userProfile={userProfile}
-          focusMode={focusMode}
-          setFocusMode={setFocusMode}
-          notifications={notifications}
-          setNotifications={setNotifications}
-          activeCategory={activeCategory}
-          setActiveCategory={setActiveCategory}
-          onLogout={handleLogout}
-        />
-      )}
-
-      {/* Main content */}
-      <div className="flex flex-1 overflow-hidden">
+        {/* Navbar */}
         {!focusMode && !isDesktopMode && (
-          <Sidebar
+          <Navbar
             theme={settings.theme}
-            tasks={tasks}
+            setTheme={(t) => setSettings((prev) => ({ ...prev, theme: t }))}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            userProfile={userProfile}
+            focusMode={focusMode}
+            setFocusMode={setFocusMode}
             activeCategory={activeCategory}
             setActiveCategory={setActiveCategory}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            priorityFilter={priorityFilter}
-            setPriorityFilter={setPriorityFilter}
-            onAddTask={handleOpenAddTask}
-            onOpenWhatsNew={() => setIsWhatsNewOpen(true)}
-            onOpenFeatures={() => setIsFeaturesOpen(true)}
+            onLogout={handleLogout}
           />
         )}
 
-        <div className="flex-grow flex flex-col relative overflow-hidden h-full">
-          {activeCategory === "Settings" ? (
-            <SettingsPanel
+        {/* Main content */}
+        <div className="flex flex-1 overflow-hidden">
+          {!focusMode && !isDesktopMode && (
+            <Sidebar
               theme={settings.theme}
-              settings={settings}
-              onSave={handleSaveSettings}
-              userProfile={userProfile}
-              onLogout={handleLogout}
-            />
-          ) : activeCategory === "Progress Tracker" ? (
-            <ProgressTracker
               tasks={tasks}
-              theme={settings.theme}
-              onClose={() => setActiveCategory("Dashboard")}
-            />
-          ) : (
-            <PreviewPanel
-              theme={settings.theme}
-              tasks={filteredTasks}
-              isDesktopMode={isDesktopMode}
-              allTasks={tasks}
               activeCategory={activeCategory}
-              isModalOpen={isModalOpen}
-              focusMode={focusMode}
-              setFocusMode={setFocusMode}
-              onEdit={handleEdit}
-              onDelete={handleDeleteRequest}
-              onComplete={toggleTaskCompletion}
-              onToggleFocus={toggleFocus}
-              onUpdateTask={updateTaskById}
+              setActiveCategory={setActiveCategory}
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              priorityFilter={priorityFilter}
+              setPriorityFilter={setPriorityFilter}
               onAddTask={handleOpenAddTask}
-              onOpenProgress={handleOpenProgress}
+              onOpenWhatsNew={() => setIsWhatsNewOpen(true)}
+              onOpenFeatures={() => setIsFeaturesOpen(true)}
             />
           )}
 
-          {/* Floating Dock — always visible at bottom of active workspace */}
-          <FloatingDock
-            tasks={tasks}
-            theme={settings.theme}
-            onUpdateTask={updateTaskById}
-            onComplete={toggleTaskCompletion}
-            onEdit={handleEdit}
-            onDelete={handleDeleteRequest}
-            onCreateTask={addTask}
+          <div className="flex-grow flex flex-col relative overflow-hidden h-full">
+            {activeCategory === "Settings" ? (
+              <SettingsPanel
+                theme={settings.theme}
+                settings={settings}
+                onSave={handleSaveSettings}
+                userProfile={userProfile}
+                onLogout={handleLogout}
+              />
+            ) : activeCategory === "Progress Tracker" ? (
+              <ProgressTracker
+                tasks={tasks}
+                theme={settings.theme}
+                onClose={() => setActiveCategory("Dashboard")}
+              />
+            ) : (
+              <PreviewPanel
+                theme={settings.theme}
+                tasks={filteredTasks}
+                isDesktopMode={isDesktopMode}
+                allTasks={tasks}
+                activeCategory={activeCategory}
+                isModalOpen={isModalOpen}
+                focusMode={focusMode}
+                setFocusMode={setFocusMode}
+                onEdit={handleEdit}
+                onDelete={handleDeleteRequest}
+                onComplete={toggleTaskCompletion}
+                onToggleFocus={toggleFocus}
+                onUpdateTask={updateTaskById}
+                onAddTask={handleOpenAddTask}
+                onOpenProgress={handleOpenProgress}
+              />
+            )}
+
+            {/* Floating Dock — always visible at bottom of active workspace */}
+            <FloatingDock
+              tasks={tasks}
+              theme={settings.theme}
+              onUpdateTask={updateTaskById}
+              onComplete={toggleTaskCompletion}
+              onEdit={handleEdit}
+              onDelete={handleDeleteRequest}
+              onCreateTask={addTask}
+              defaultPriority={settings.defaultPriority}
+            />
+          </div>
+        </div>
+
+        {/* Add Task Modal */}
+        {isModalOpen && (
+          <AddTaskModal
+            onClose={() => { setIsModalOpen(false); setEditingTask(null); }}
+            onCreate={editingTask && (!editingTask.isDraft || editingTask.isEdit) ? updateTask : addTask}
+            editingTask={editingTask}
             defaultPriority={settings.defaultPriority}
           />
-        </div>
+        )}
+        {/* Confirm Delete Modal */}
+        {taskToDelete && (
+          <ConfirmDeleteModal
+            task={taskToDelete}
+            theme={settings.theme}
+            onConfirm={() => {
+              deleteTask(taskToDelete.id);
+              setTaskToDelete(null);
+            }}
+            onCancel={() => setTaskToDelete(null)}
+          />
+        )}
+
+        {/* What's New Modal */}
+        {isWhatsNewOpen && (
+          <WhatsNewModal
+            onClose={() => setIsWhatsNewOpen(false)}
+            theme={settings.theme}
+          />
+        )}
+
+        {/* Features Modal */}
+        {isFeaturesOpen && (
+          <FeaturesModal
+            onClose={() => setIsFeaturesOpen(false)}
+            theme={settings.theme}
+          />
+        )}
+
+        {/* Toast notifications */}
+        <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+        {/* Floating Task List Bubble */}
+        <FloatingTaskListBubble
+          tasks={tasks}
+          onEdit={handleEdit}
+          theme={settings.theme}
+        />
       </div>
-
-      {/* Add Task Modal */}
-      {isModalOpen && (
-        <AddTaskModal
-          onClose={() => { setIsModalOpen(false); setEditingTask(null); }}
-          onCreate={editingTask ? updateTask : addTask}
-          editingTask={editingTask}
-          defaultPriority={settings.defaultPriority}
-        />
-      )}
-      {/* Confirm Delete Modal */}
-      {taskToDelete && (
-        <ConfirmDeleteModal
-          task={taskToDelete}
-          theme={settings.theme}
-          onConfirm={() => {
-            deleteTask(taskToDelete.id);
-            setTaskToDelete(null);
-          }}
-          onCancel={() => setTaskToDelete(null)}
-        />
-      )}
-
-      {/* What's New Modal */}
-      {isWhatsNewOpen && (
-        <WhatsNewModal
-          onClose={() => setIsWhatsNewOpen(false)}
-          theme={settings.theme}
-        />
-      )}
-
-      {/* Features Modal */}
-      {isFeaturesOpen && (
-        <FeaturesModal
-          onClose={() => setIsFeaturesOpen(false)}
-          theme={settings.theme}
-        />
-      )}
-
-      {/* Toast notifications */}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
-
-      {/* Floating Task List Bubble */}
-      <FloatingTaskListBubble
-        tasks={tasks}
-        onEdit={handleEdit}
-        theme={settings.theme}
-      />
-    </div>
+    </NotificationProvider>
   );
 }
 

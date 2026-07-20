@@ -4,23 +4,68 @@
     "items": [
       {
         "name": "Create Tasks",
-        "description": "Quickly create tasks with titles, descriptions, due dates, and times.",
+        "description": "Create tasks with titles, deadlines, priorities, and notes in just a few clicks.",
         "icon": "📝"
       },
       {
         "name": "Edit Tasks",
-        "description": "Modify task details like description, priority, and checklist items on the fly.",
+        "description": "Update task details, deadlines, priorities, and progress whenever needed.",
         "icon": "✏️"
       },
       {
         "name": "Delete Tasks",
-        "description": "Remove unwanted or duplicate tasks with confirm modal checks.",
+        "description": "Remove completed or unnecessary tasks with confirmation prompts.",
         "icon": "🗑️"
       },
       {
-        "name": "Floating Task Bubbles",
-        "description": "Visualize tasks as floating interactive bubbles containing water levels representing checklist progress.",
+        "name": "Subtask Management",
+        "description": "Break large tasks into smaller subtasks and track their completion individually.",
+        "icon": "📋"
+      }
+    ]
+  },
+  {
+    "category": "Floating Bubbles",
+    "items": [
+      {
+        "name": "Interactive Bubbles",
+        "description": "Visualize every task as a floating bubble that stays visible on your desktop workspace.",
         "icon": "🫧"
+      },
+      {
+        "name": "Drag and Drop",
+        "description": "Move task bubbles freely and organize your workspace naturally.",
+        "icon": "🖱️"
+      },
+      {
+        "name": "Priority Colors",
+        "description": "Bubble colors change dynamically based on task priority and completion status.",
+        "icon": "🎨"
+      },
+      {
+        "name": "Bubble Animations",
+        "description": "Smooth floating, hover, and interaction animations make task management engaging.",
+        "icon": "✨"
+      }
+    ]
+  },
+  {
+    "category": "Progress Tracking",
+    "items": [
+      {
+        "name": "Checklist Progress",
+        "description": "Monitor subtask completion percentages in real time.",
+        "icon": "📈"
+      },
+      {
+        "name": "Deadline Countdown",
+        "description": "View the remaining time for every task directly from the bubble.",
+        "icon": "⏳"
+      },
+      {
+        "name": "Overdue Alerts",
+        "description": "Overdue tasks are automatically highlighted to grab your attention.",
+        "icon": "🚨"
       }
     ]
   },
@@ -29,23 +74,23 @@
     "items": [
       {
         "name": "Focus Mode",
-        "description": "Maximize focus by filtering your workspace to focus tasks only.",
-        "icon": "⭐"
+        "description": "Filter distractions and display only the tasks that matter most.",
+        "icon": "🎯"
       },
       {
-        "name": "Smart Reminders",
-        "description": "Receive native desktop system notifications exactly when a task is due.",
+        "name": "Smart Notifications",
+        "description": "Receive desktop notifications for upcoming deadlines and important reminders.",
         "icon": "🔔"
       },
       {
         "name": "Priority Queue",
-        "description": "Order your tasks automatically based on priority (Low, Medium, High).",
+        "description": "Sort tasks automatically by urgency and importance.",
         "icon": "⚡"
       },
       {
-        "name": "Keyboard Shortcuts",
-        "description": "Use global shortcuts like Escape to cancel editing and step back smoothly.",
-        "icon": "⌨️"
+        "name": "Search & Filters",
+        "description": "Quickly find tasks using categories, priorities, and keywords.",
+        "icon": "🔍"
       }
     ]
   },
@@ -53,19 +98,49 @@
     "category": "Customization",
     "items": [
       {
-        "name": "Tooltips",
-        "description": "Hover over elements to see detailed descriptions without cluttering the screen.",
-        "icon": "💡"
-      },
-      {
-        "name": "Themes",
-        "description": "Switch seamlessly between light and dark mode preferences.",
+        "name": "Light & Dark Themes",
+        "description": "Switch seamlessly between light and dark mode.",
         "icon": "🌓"
       },
       {
-        "name": "Auto Save Draft",
-        "description": "Automatically preserve task draft input to prevent data loss.",
+        "name": "Tooltips",
+        "description": "Hover over bubbles and controls to see detailed information.",
+        "icon": "💡"
+      },
+      {
+        "name": "Responsive Layout",
+        "description": "Enjoy a clean interface that adapts to different screen sizes.",
+        "icon": "📱"
+      },
+      {
+        "name": "Personal Workspace",
+        "description": "Arrange bubbles and customize your workspace according to your preferences.",
+        "icon": "🎨"
+      }
+    ]
+  },
+  {
+    "category": "Data & Storage",
+    "items": [
+      {
+        "name": "Auto Save",
+        "description": "All task changes are saved automatically to prevent data loss.",
         "icon": "💾"
+      },
+      {
+        "name": "Persistent Storage",
+        "description": "Tasks remain available even after restarting the application.",
+        "icon": "🗄️"
+      },
+      {
+        "name": "User-Specific Data",
+        "description": "Each user's tasks and settings are stored separately.",
+        "icon": "👤"
+      },
+      {
+        "name": "Real-Time Updates",
+        "description": "Changes are reflected instantly across the application.",
+        "icon": "🔄"
       }
     ]
   }

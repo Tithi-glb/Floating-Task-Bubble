@@ -90,6 +90,19 @@ export default function WhatsNewModal({ onClose, theme }) {
                   </li>
                 ))}
               </ul>
+
+              {update.screenshots && update.screenshots.map((screen, sIdx) => (
+                <div key={sIdx} className="mt-4 border-t border-slate-200/40 dark:border-slate-800/40 pt-3">
+                  <p className={`text-[10px] font-bold mb-1.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                    {screen.title}
+                  </p>
+                  <img
+                    src={screen.image}
+                    alt={screen.title}
+                    className="w-full rounded-xl border border-slate-200/50 dark:border-slate-800/50 shadow-sm"
+                  />
+                </div>
+              ))}
             </div>
           ))}
         </div>

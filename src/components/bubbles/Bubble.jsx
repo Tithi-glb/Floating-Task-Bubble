@@ -37,6 +37,14 @@ function isOverdue(task) {
   return d < now;
 }
 
+function parseLocalDateTime(dateStr, timeStr) {
+  if (!dateStr) return new Date(NaN);
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [hour, minute] = (timeStr || "00:00").split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
+}
+
+
 // ─── Filled Priority-based gradient backgrounds ─────────────────────────────
 
 function getFilledBackground(task, overdue) {
@@ -198,7 +206,7 @@ export default function Bubble({
     }
   }, [showToolbar]);
 
-  // Check urgency (< 1 hr) and critical alert (< 15 min or overdue)
+  // Check urgency (< 1 hr) and critical alert (< 15 min or overdue or custom reminder reached)
   useEffect(() => {
     const check = () => {
       if (task.completed) {
@@ -207,25 +215,34 @@ export default function Bubble({
         return;
       }
       const overdueState = isOverdue(task);
+
+      const hasCustomReminder = !!(task.reminderDate && task.reminderTime);
+      const reminderDateTime = hasCustomReminder
+        ? parseLocalDateTime(task.reminderDate, task.reminderTime)
+        : null;
+
+      const now = new Date();
+      const hasReminderFired = !!(reminderDateTime && now >= reminderDateTime);
+
       if (!task.dueDate || !task.time) {
         setIsUrgent(false);
-        setIsCritical(overdueState);
+        setIsCritical(overdueState || hasReminderFired);
         return;
       }
       const dl = new Date(`${task.dueDate}T${task.time}:00`);
       if (isNaN(dl.getTime())) {
         setIsUrgent(false);
-        setIsCritical(overdueState);
+        setIsCritical(overdueState || hasReminderFired);
         return;
       }
       const diff = dl - new Date();
       setIsUrgent(diff > 0 && diff <= 60 * 60 * 1000);
-      setIsCritical(overdueState || (diff > 0 && diff <= 15 * 60 * 1000));
+      setIsCritical(overdueState || (diff > 0 && diff <= 15 * 60 * 1000) || hasReminderFired);
     };
     check();
     const id = setInterval(check, 10000);
     return () => clearInterval(id);
-  }, [task.dueDate, task.time, task.completed]);
+  }, [task.dueDate, task.time, task.completed, task.reminderDate, task.reminderTime]);
 
   // Determine tooltip opposite position to prevent overlap
   const getTooltipPosition = () => {
@@ -266,10 +283,13 @@ export default function Bubble({
 
   const floatAnimation = isCritical
     ? {
-      x: [0, -1.5, 1.5, -1.5, 1.5, 0],
-      y: [0, -1, 1, -1, 1, 0],
-      rotate: [0, -0.5, 0.5, -0.5, 0.5, 0],
-      boxShadow: [boxShadow, `inset 0 10px 26px rgba(255,255,255,0.55), 0 0 50px ${theme.glowStrong}, 0 0 90px ${theme.glowStrong}66`, boxShadow]
+      scale: [1, 1.06, 1],
+      y: [0, -4, 0],
+      boxShadow: [
+        boxShadow,
+        `inset 0 10px 26px rgba(255,255,255,0.55), 0 0 45px rgba(185,28,28,0.95), 0 0 85px rgba(153,27,27,0.75)`,
+        boxShadow
+      ]
     }
     : {
       y: [0, -8, 0],
@@ -280,10 +300,9 @@ export default function Bubble({
 
   const floatTransition = isCritical
     ? {
-      x: { duration: 0.35, repeat: Infinity, ease: "linear" },
-      y: { duration: 0.35, repeat: Infinity, ease: "linear" },
-      rotate: { duration: 0.35, repeat: Infinity, ease: "linear" },
-      boxShadow: { duration: 0.5, repeat: Infinity, ease: "easeInOut", repeatType: "reverse" }
+      scale: { duration: 1.2, repeat: Infinity, ease: "easeInOut" },
+      y: { duration: 2.0, repeat: Infinity, ease: "easeInOut" },
+      boxShadow: { duration: 1.2, repeat: Infinity, ease: "easeInOut", repeatType: "reverse" }
     }
     : {
       y: { duration: 3.2 + (Number(task.id) % 5) * 0.4, repeat: Infinity, ease: "easeInOut" },

@@ -1,13 +1,26 @@
 [
   {
     "version": "1.2.0",
-    "date": "25 July 2026",
+    "date": "20 July 2026",
     "changes": [
-      "Added Reminder System",
-      "Added Focus Mode Improvements",
-      "Added Keyboard Shortcuts",
-      "Added Internal Notifications"
+      "Added reminder option in the task creation sidebar.",
+      "Implemented internal desktop notification and toast message system.",
+      "Replaced browser delete confirmation popup with a custom in-app confirmation dialog.",
+      "Implemented dynamic bubble water-level visualization based on subtask completion.",
+      "Added floating task list panel at the top-right corner showing all tasks.",
+      "Added tooltips for all interactive elements.",
+      "Implemented smart tooltip positioning based on the nearest desktop edge.",
+      "Enabled Enter key support for saving and confirming actions.",
+      "Improved Escape key behavior for closing dialogs and cancelling actions.",
+      "**Enhanced notification system for reminders, deadlines, and updates**",
+      "Improved overall user experience and interaction consistency."
+    ],
+    "screenshots": [
+      {
+        "image": "/screenshots/Toast-message.png"
+      }
     ]
+   
   },
   {
     "version": "1.1.0",
@@ -15,7 +28,12 @@
     "changes": [
       "Added Floating Task Bubbles",
       "Added Custom Priority Colors",
-      "Added Auto Save Draft Mode"
+      "New Task Creation",
+      "Added easy access bar at bottom",
+      "Dark/Light mode navigation",
+      "Progress Tracker",
+      "Editing task option by hovering on it",
+      "Click on it show all the deatils of the task."
     ]
   }
 ]

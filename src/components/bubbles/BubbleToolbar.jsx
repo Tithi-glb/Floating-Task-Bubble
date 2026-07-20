@@ -68,10 +68,12 @@ export default function BubbleToolbar({
 
   const handleSaveReminder = (e) => {
     e.stopPropagation();
+    const finalDate = reminderDate || task.dueDate || new Date().toISOString().split("T")[0];
+    const finalTime = reminderTime || task.time || "09:00";
     onUpdateTask(task.id, {
-      reminderDate,
-      reminderTime,
-      hasReminder: !!(reminderDate && reminderTime),
+      reminderDate: finalDate,
+      reminderTime: finalTime,
+      hasReminder: true,
     });
     setSubMenu(null);
   };
@@ -186,7 +188,6 @@ export default function BubbleToolbar({
                     ))}
                   </div>
                 )}
-
                 {subMenu === "reminder" && (
                   <div className="flex flex-col gap-2 text-xs text-white">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-white/40">Reminder</p>
@@ -231,6 +232,7 @@ export default function BubbleToolbar({
                     </div>
                   </div>
                 )}
+
               </motion.div>
             )}
           </AnimatePresence>
