@@ -20,15 +20,15 @@ function AddTaskModal({ onClose, onCreate, editingTask, defaultPriority = "Mediu
     return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   };
 
-  const [time, setTime] = useState(editingTask ? (editingTask.time || "") : getDueTimeDefault());
-  const [dueDate, setDueDate] = useState(editingTask ? (editingTask.dueDate || "") : today);
+  const [time, setTime] = useState(editingTask?.time ? editingTask.time : getDueTimeDefault());
+  const [dueDate, setDueDate] = useState(editingTask?.dueDate ? editingTask.dueDate : today);
   const [priority, setPriority] = useState(editingTask?.priority || defaultPriority);
   const [isFocused, setIsFocused] = useState(editingTask?.isFocused || false);
   const [subtasks, setSubtasks] = useState(editingTask?.subtasks || []);
   const [newSubtaskText, setNewSubtaskText] = useState("");
 
-  const defaultReminderTimeVal = editingTask ? (editingTask.reminderTime || "") : getReminderTimeFromDueTime(getDueTimeDefault());
-  const defaultReminderDateVal = editingTask ? (editingTask.reminderDate || "") : today;
+  const defaultReminderTimeVal = editingTask?.reminderTime ? editingTask.reminderTime : getReminderTimeFromDueTime(editingTask?.time ? editingTask.time : getDueTimeDefault());
+  const defaultReminderDateVal = editingTask?.reminderDate ? editingTask.reminderDate : (editingTask?.dueDate ? editingTask.dueDate : today);
 
   const [reminderDate, setReminderDate] = useState(defaultReminderDateVal);
   const [reminderTime, setReminderTime] = useState(defaultReminderTimeVal);

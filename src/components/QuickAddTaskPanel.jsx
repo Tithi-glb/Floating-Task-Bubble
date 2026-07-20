@@ -4,13 +4,35 @@ import Tooltip from "./Tooltip";
 
 export default function QuickAddTaskPanel({ theme, onCreateTask, defaultPriority = "Medium", onClose }) {
   const isDark = theme === "dark";
+  const today = new Date().toISOString().split("T")[0];
+
+  const getDueTimeDefault = () => {
+    const d = new Date();
+    d.setHours(d.getHours() + 1);
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  };
+
+  const getReminderTimeFromDueTime = (dueTimeStr) => {
+    if (!dueTimeStr) return "";
+    const [hours, minutes] = dueTimeStr.split(":").map(Number);
+    const d = new Date();
+    d.setHours(hours, minutes - 15, 0, 0);
+    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  };
+
+  const defaultDueTime = getDueTimeDefault();
+  const defaultReminderTime = getReminderTimeFromDueTime(defaultDueTime);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [time, setTime] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [reminderDate, setReminderDate] = useState("");
-  const [reminderTime, setReminderTime] = useState("");
+  const [time, setTime] = useState(defaultDueTime);
+  const [dueDate, setDueDate] = useState(today);
+  const [reminderDate, setReminderDate] = useState(today);
+  const [reminderTime, setReminderTime] = useState(defaultReminderTime);
   const [subtasks, setSubtasks] = useState([]);
+
+  const [isReminderTimeUserEdited, setIsReminderTimeUserEdited] = useState(false);
+  const [isReminderDateUserEdited, setIsReminderDateUserEdited] = useState(false);
 
   // Subtask input states
   const [showAddSubtaskInput, setShowAddSubtaskInput] = useState(false);
@@ -21,8 +43,6 @@ export default function QuickAddTaskPanel({ theme, onCreateTask, defaultPriority
 
   const titleInputRef = useRef(null);
   const subtaskInputRef = useRef(null);
-
-  const today = new Date().toISOString().split("T")[0];
 
   // Auto-focus title input on mount
   useEffect(() => {
@@ -38,13 +58,28 @@ export default function QuickAddTaskPanel({ theme, onCreateTask, defaultPriority
     }
   }, [showAddSubtaskInput]);
 
+  const handleDueTimeChange = (newDueTime) => {
+    setTime(newDueTime);
+    if (!isReminderTimeUserEdited) {
+      setReminderTime(getReminderTimeFromDueTime(newDueTime));
+    }
+  };
 
-  const getReminderTimeFromDueTime = (dueTimeStr) => {
-    if (!dueTimeStr) return "";
-    const [hours, minutes] = dueTimeStr.split(":").map(Number);
-    const d = new Date();
-    d.setHours(hours, minutes - 15, 0, 0);
-    return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+  const handleDueDateChange = (newDueDate) => {
+    setDueDate(newDueDate);
+    if (!isReminderDateUserEdited) {
+      setReminderDate(newDueDate);
+    }
+  };
+
+  const handleReminderTimeChange = (newReminderTime) => {
+    setReminderTime(newReminderTime);
+    setIsReminderTimeUserEdited(true);
+  };
+
+  const handleReminderDateChange = (newReminderDate) => {
+    setReminderDate(newReminderDate);
+    setIsReminderDateUserEdited(true);
   };
 
   const handleAddSubtask = () => {
@@ -188,7 +223,7 @@ export default function QuickAddTaskPanel({ theme, onCreateTask, defaultPriority
                     type="date"
                     min={today}
                     value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
+                    onChange={(e) => handleDueDateChange(e.target.value)}
                     className={`w-full p-2.5 rounded-xl border focus:outline-none focus:border-[#4F7CFF] focus:ring-2 focus:ring-[#4F7CFF]/15 transition ${inputBg}`}
                   />
                 </Tooltip>
@@ -200,7 +235,7 @@ export default function QuickAddTaskPanel({ theme, onCreateTask, defaultPriority
                   <input
                     type="time"
                     value={time}
-                    onChange={(e) => setTime(e.target.value)}
+                    onChange={(e) => handleDueTimeChange(e.target.value)}
                     className={`w-full p-2.5 rounded-xl border focus:outline-none focus:border-[#4F7CFF] focus:ring-2 focus:ring-[#4F7CFF]/15 transition ${inputBg}`}
                   />
                 </Tooltip>
@@ -213,7 +248,7 @@ export default function QuickAddTaskPanel({ theme, onCreateTask, defaultPriority
                     type="date"
                     min={today}
                     value={reminderDate}
-                    onChange={(e) => setReminderDate(e.target.value)}
+                    onChange={(e) => handleReminderDateChange(e.target.value)}
                     className={`w-full p-2.5 rounded-xl border focus:outline-none focus:border-[#4F7CFF] focus:ring-2 focus:ring-[#4F7CFF]/15 transition ${inputBg}`}
                   />
                 </Tooltip>
@@ -225,7 +260,7 @@ export default function QuickAddTaskPanel({ theme, onCreateTask, defaultPriority
                   <input
                     type="time"
                     value={reminderTime}
-                    onChange={(e) => setReminderTime(e.target.value)}
+                    onChange={(e) => handleReminderTimeChange(e.target.value)}
                     className={`w-full p-2.5 rounded-xl border focus:outline-none focus:border-[#4F7CFF] focus:ring-2 focus:ring-[#4F7CFF]/15 transition ${inputBg}`}
                   />
                 </Tooltip>
