@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useRef } from "react";
 import { notificationService } from "../services/notificationService";
+import { playNotificationSound } from "../utils/playNotification";
 
 export const NotificationContext = createContext();
 
@@ -82,7 +83,7 @@ export function NotificationProvider({ children, tasks = [] }) {
       if (saved) {
         lastTriggeredRef.current = JSON.parse(saved);
       }
-    } catch {}
+    } catch { }
   }, []);
 
   // Track task completions
@@ -127,10 +128,14 @@ export function NotificationProvider({ children, tasks = [] }) {
     const priorityText = task?.priority ? `Priority: ${task.priority}` : "";
     const dueText = task?.dueDate && task?.time ? `Due: ${formatDate(task.dueDate)} at ${formatTime(task.time)}` : "";
     const headerTitle = type === "completed" ? "Task Completed" : type === "overdue" ? "Task Overdue" : type === "dueSoon" ? "Task Due Soon" : "Task Reminder";
-    
+
     notificationService.sendNotification(headerTitle, {
       body: `"${task?.title || ""}"\n${priorityText ? priorityText + "\n" : ""}${dueText}`,
+      silent: true, // Make native notification silent to prevent double/clashing sounds
     });
+
+    // Play our custom notification sound
+    playNotificationSound();
   };
 
   // Check loop for reminders, deadlines, and overdue tasks

@@ -3,9 +3,9 @@ export function showNotification(task) {
     new Notification("⚠️ Urgent Task", {
       body: `${task.title} at ${task.time}`,
     });
-    const audio = new Audio("/sounds/notification.mp3");
+    const audio = new Audio("/sounds/notificationSound.mp3");
 
-    audio.volume = 0.7;
+    audio.volume = 0.9;
 
     audio.play().catch((error) => {
       console.log("Could not play notification sound:", error);
