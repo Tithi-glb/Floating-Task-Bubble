@@ -122,6 +122,8 @@ const sizeMap = {
   Low: { px: 100, hoverPx: 114, badge: "🌱" },
 };
 
+// const starClipPath = "polygon(50% 2%, 60.6% 35.6%, 96.1% 35.6%, 67.3% 56.7%, 77.8% 89.4%, 50% 69.2%, 22.2% 89.4%, 32.7% 56.7%, 3.9% 35.6%, 39.4% 35.6%)";
+
 // ─── Main Bubble Component ───────────────────────────────────────────────────
 
 export default function Bubble({
@@ -271,12 +273,12 @@ export default function Bubble({
           task.priority === "High" ? "text-sm" :
             task.priority === "Low" ? "text-[11px]" : "text-xs";
 
-  const borderStyle = overdue
-    ? `2.5px solid rgba(185,28,28,0.8)`
-    : isUrgent
-      ? `2.5px solid rgba(239,68,68,0.85)`
-      : task.isFocused
-        ? `2.5px solid rgba(245,158,11,0.9)`
+  const borderStyle = task.isFocused
+    ? "none"
+    : overdue
+      ? `2.5px solid rgba(185,28,28,0.8)`
+      : isUrgent
+        ? `2.5px solid rgba(239,68,68,0.85)`
         : task.completed
           ? `1.5px solid rgba(100,116,139,0.4)`
           : `1.5px solid ${theme.border}`;
@@ -329,7 +331,16 @@ export default function Bubble({
         onClick={handleBubbleClick}
         transition={{ type: "spring", stiffness: 260, damping: 22 }}
         className="cursor-pointer relative z-10"
-        style={{ width: px, height: px, position: "absolute", top: 10, left: 10 }}
+        style={{
+          width: px,
+          height: px,
+          position: "absolute",
+          top: 10,
+          left: 10,
+          filter: task.isFocused
+            ? "drop-shadow(0 4px 12px rgba(245,158,11,0.5)) drop-shadow(0 12px 28px rgba(245,158,11,0.35))"
+            : "none",
+        }}
       >
         {/* Sphere body */}
         <motion.div
@@ -341,6 +352,7 @@ export default function Bubble({
             position: "absolute",
             inset: 0,
             borderRadius: "50%",
+            clipPath: "none",
             background: getFilledBackground(task, overdue),
             border: borderStyle,
             boxShadow,
@@ -350,9 +362,32 @@ export default function Bubble({
           }}
           className="flex flex-col items-center justify-center select-none overflow-hidden"
         >
+          {/* Overdue Badge attached to bubble inside draggable motion.div */}
+          {task.isFocused && (
+            <motion.div
+              animate={{ y: [0, -4, 0] }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute -top-8 left-1/2 -translate-x-1/2 text-xl z-30"
+            >
+              ⭐
+            </motion.div>
+          )}
+
           {/* Water progress fill */}
           {progress > 0 && (
-            <div style={{ position: "absolute", inset: 0, borderRadius: "50%", overflow: "hidden", zIndex: 1, pointerEvents: "none" }}>
+            <div style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "50%",
+              clipPath: "none",
+              overflow: "hidden",
+              zIndex: 1,
+              pointerEvents: "none"
+            }}>
               <div
                 style={{
                   position: "absolute", bottom: 0, left: 0, right: 0,
@@ -373,16 +408,18 @@ export default function Bubble({
           <div className="absolute top-2 left-6 right-6 h-4 bg-gradient-to-b from-white/60 to-white/0 rounded-full blur-[0.5px] pointer-events-none z-10" />
           <div className="absolute bottom-5 right-7 w-5 h-5 bg-white/20 rounded-full blur-md pointer-events-none z-10" />
 
-          {/* Priority Icon */}
-          <span className="absolute top-7 text-[11px] pointer-events-none select-none z-20">
-            {task.completed ? "✅" : overdue ? "⚠️" : badge}
-          </span>
-
           {/* Content (Text is always solid black/dark for readability) */}
-          <div className="text-center px-3.5 mt-1 select-none pointer-events-none flex flex-col items-center justify-center z-20 relative text-black">
-            <h2 className={`font-black tracking-tight leading-tight text-center break-words flex items-center justify-center gap-0.5 ${titleFontSize}`} style={{ color: "#111111" }}>
-              {task.isFocused && <span className="text-amber-600">★</span>}
-              {task.title}
+          <div
+            className="text-center px-1 select-none pointer-events-none flex flex-col items-center justify-center z-20 relative text-black"
+            style={{ maxWidth: task.isFocused ? `${px * 0.62}px` : `${px * 0.72}px` }}
+          >
+            <h2
+              className={`font-black tracking-tight leading-tight text-center break-words ${titleFontSize}`}
+              style={{ color: "#111111" }}
+            >
+              <span className="relative inline-block">
+                {task.title}
+              </span>
             </h2>
             <p className={`text-[9px] mt-0.5 font-bold leading-none ${theme.timeColor}`} style={{ color: "#111111" }}>
               {formatTime(task.time)}

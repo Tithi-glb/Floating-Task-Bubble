@@ -141,12 +141,35 @@ function Sidebar({
           </button>
         </Tooltip>
 
+        <div className={`p-3 rounded-xl border text-[11px] leading-relaxed ${
+          theme === "dark"
+            ? "bg-slate-900/50 border-slate-800/80 text-slate-400"
+            : "bg-blue-50/50 border-blue-100/60 text-slate-500"
+        }`}>
+          <div className="flex items-start gap-1.5">
+            <span className="text-xs">💡</span>
+            <div>
+              In <strong className={theme === "dark" ? "text-slate-200" : "text-slate-700"}>Dashboard</strong> you see today's tasks. Go to <strong className={theme === "dark" ? "text-slate-200" : "text-slate-700"}>My Tasks</strong> to view all listed tasks.
+            </div>
+          </div>
+        </div>
+
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-2">Navigation</label>
           {categories.map((cat) => {
             const isActive = activeCategory === cat.name;
             return (
-              <Tooltip key={cat.name} content={`View ${cat.name}`} className="w-full">
+              <Tooltip
+                key={cat.name}
+                content={
+                  cat.name === "Dashboard"
+                    ? "View Dashboard (Shows today's tasks)"
+                    : cat.name === "My Tasks"
+                    ? "View My Tasks (Shows all tasks listed)"
+                    : `View ${cat.name}`
+                }
+                className="w-full"
+              >
                 <button
                   onClick={() => setActiveCategory(cat.name)}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 cursor-pointer ${

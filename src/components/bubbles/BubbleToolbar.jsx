@@ -133,24 +133,33 @@ export default function BubbleToolbar({
               WebkitBackdropFilter: "blur(20px)",
             }}
           >
-            {ACTIONS.map((action) => (
-              <Tooltip key={action.key} content={action.label}>
-                <button
-                  onClick={(e) => handleAction(action.key, e)}
-                  className={`relative w-8 h-8 flex items-center justify-center rounded-xl text-sm transition-all duration-150 cursor-pointer select-none
-                    ${subMenu === action.key
-                      ? "bg-white/20 scale-110"
-                      : action.key === "delete"
-                        ? "hover:bg-red-500/30 text-red-200"
-                        : action.key === "complete"
-                          ? "hover:bg-emerald-500/30 text-emerald-200"
-                          : "hover:bg-white/10 text-white"
-                    }`}
-                >
-                  <span className="text-base leading-none">{action.icon}</span>
-                </button>
-              </Tooltip>
-            ))}
+            {ACTIONS.map((action) => {
+              const tooltipLabel =
+                action.key === "pin"
+                  ? task.isFocused
+                    ? "Unpin Task"
+                    : "Pin Task"
+                  : action.label;
+
+              return (
+                <Tooltip key={action.key} content={tooltipLabel}>
+                  <button
+                    onClick={(e) => handleAction(action.key, e)}
+                    className={`relative w-8 h-8 flex items-center justify-center rounded-xl text-sm transition-all duration-150 cursor-pointer select-none
+                      ${subMenu === action.key
+                        ? "bg-white/20 scale-110"
+                        : action.key === "delete"
+                          ? "hover:bg-red-500/30 text-red-200"
+                          : action.key === "complete"
+                            ? "hover:bg-emerald-500/30 text-emerald-200"
+                            : "hover:bg-white/10 text-white"
+                      }`}
+                  >
+                    <span className="text-base leading-none">{action.icon}</span>
+                  </button>
+                </Tooltip>
+              );
+            })}
           </div>
 
           {/* Submenus floating above or below toolbar */}
