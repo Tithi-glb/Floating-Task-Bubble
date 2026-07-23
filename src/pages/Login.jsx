@@ -56,7 +56,7 @@ export default function Login({ onLogin, onRegister }) {
       
       setLoading(true);
       await new Promise((r) => setTimeout(r, 800));
-      const res = onRegister(name.trim(), email.trim(), password);
+      const res = await onRegister(name.trim(), email.trim(), password);
       setLoading(false);
 
       if (res.success) {
@@ -81,7 +81,7 @@ export default function Login({ onLogin, onRegister }) {
       
       setLoading(true);
       await new Promise((r) => setTimeout(r, 700));
-      const res = onLogin(email.trim(), password);
+      const res = await onLogin(email.trim(), password);
       setLoading(false);
 
       if (res.success) {

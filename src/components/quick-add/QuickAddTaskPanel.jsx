@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Tooltip from "./Tooltip";
+import Tooltip from "../Tooltip";
 
 export default function QuickAddTaskPanel({ theme, onCreateTask, defaultPriority = "Medium", onClose }) {
   const isDark = theme === "dark";

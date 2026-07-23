@@ -300,6 +300,8 @@ export default function Bubble({
         : {}),
     };
 
+  const idNum = typeof task.id === "number" ? task.id : (String(task.id).split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) || 0);
+
   const floatTransition = isCritical
     ? {
       scale: { duration: 1.2, repeat: Infinity, ease: "easeInOut" },
@@ -307,7 +309,7 @@ export default function Bubble({
       boxShadow: { duration: 1.2, repeat: Infinity, ease: "easeInOut", repeatType: "reverse" }
     }
     : {
-      y: { duration: 3.2 + (Number(task.id) % 5) * 0.4, repeat: Infinity, ease: "easeInOut" },
+      y: { duration: 3.2 + (idNum % 5) * 0.4, repeat: Infinity, ease: "easeInOut" },
       ...(isUrgent
         ? { boxShadow: { duration: 0.6, repeat: Infinity, ease: "easeInOut", repeatType: "reverse" } }
         : {}),

@@ -1,17 +1,4 @@
-import { useState } from "react";
-import Bubble from "../bubbles/Bubble";
-import ProgressTracker from "../layout/ProgressTracker";
-
-const positions = [
-  { top: "10%", left: "10%" },
-  { top: "55%", left: "18%" },
-  { top: "20%", left: "48%" },
-  { top: "62%", left: "68%" },
-  { top: "32%", left: "78%" },
-  { top: "72%", left: "42%" },
-  { top: "15%", left: "72%" },
-  { top: "45%", left: "35%" },
-];
+import { FloatingBubbleSystem } from "../bubbles";
 
 function PreviewPanel({
   theme,
@@ -26,16 +13,11 @@ function PreviewPanel({
   onToggleFocus,
   onUpdateTask,
   onAddTask,
-  onOpenProgress,
 }) {
-  // Independent tooltip and progress tracker active states
-  const [activeTooltipTask, setActiveTooltipTask] = useState(null);
-  const [activeProgressTask, setActiveProgressTask] = useState(null);
-
   return (
     <div
       className={`
-        flex-1
+        flex-grow
         relative
         overflow-hidden
         transition-all
@@ -80,11 +62,10 @@ function PreviewPanel({
       {tasks.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
           <div
-            className={`w-full max-w-130 rounded-3xl backdrop-blur-xl p-10 text-center shadow-2xl ${
-              theme === "dark"
+            className={`w-full max-w-130 rounded-3xl backdrop-blur-xl p-10 text-center shadow-2xl ${theme === "dark"
                 ? "bg-slate-900/90 border border-slate-800 text-slate-100"
                 : "bg-white/80 border border-white/50 text-slate-900"
-            }`}
+              }`}
           >
             <div className="mx-auto w-28 h-28 rounded-full bg-gradient-to-br from-[#4F7CFF] to-[#A855F7] shadow-lg flex items-center justify-center text-5xl mb-6">
               🫧
@@ -99,8 +80,8 @@ function PreviewPanel({
             <div className="grid grid-cols-3 gap-4 mt-8">
               {[
                 { icon: "➕", label: "Create Task", bg: theme === "dark" ? "bg-slate-800" : "bg-[#F4F8FF]" },
-                { icon: "🎯", label: "Focus Mode",  bg: theme === "dark" ? "bg-slate-800" : "bg-[#F5ECFF]" },
-                { icon: "📅", label: "Plan Day",    bg: theme === "dark" ? "bg-slate-800" : "bg-[#ECFDF5]" },
+                { icon: "🎯", label: "Focus Mode", bg: theme === "dark" ? "bg-slate-800" : "bg-[#F5ECFF]" },
+                { icon: "📅", label: "Plan Day", bg: theme === "dark" ? "bg-slate-800" : "bg-[#ECFDF5]" },
               ].map((c) => (
                 <div key={c.label} className={`rounded-2xl p-4 hover:scale-105 transition cursor-default ${c.bg}`}>
                   <div className="text-2xl">{c.icon}</div>
@@ -118,46 +99,17 @@ function PreviewPanel({
         </div>
       )}
 
-      {/* Bubble canvas */}
-      {tasks.map((task, index) => (
-        <div
-          key={task.id}
-          className="absolute"
-          style={positions[index % positions.length]}
-        >
-          <Bubble
-            task={task}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onComplete={onComplete}
-            onToggleFocus={onToggleFocus}
-            onUpdateTask={onUpdateTask}
-            onOpenProgress={onOpenProgress}
-            activeTooltipTask={activeTooltipTask}
-            setActiveTooltipTask={setActiveTooltipTask}
-            activeProgressTask={activeProgressTask}
-            setActiveProgressTask={setActiveProgressTask}
-          />
-        </div>
-      ))}
-
-      {/* Independent Progress Tracker Panel Modal */}
-      {activeProgressTask && (
-        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-6">
-          <div
-            className="w-full max-w-[900px] h-[85%] rounded-[30px] shadow-2xl overflow-hidden border border-white/20 relative"
-            style={{
-              background: theme === "dark" ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)",
-              backdropFilter: "blur(24px)",
-            }}
-          >
-            <ProgressTracker
-              tasks={tasks}
-              theme={theme}
-              onClose={() => setActiveProgressTask(null)}
-            />
-          </div>
-        </div>
+      {/* Bubble Canvas */}
+      {tasks.length > 0 && (
+        <FloatingBubbleSystem
+          tasks={tasks}
+          theme={theme}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onComplete={onComplete}
+          onToggleFocus={onToggleFocus}
+          onUpdateTask={onUpdateTask}
+        />
       )}
     </div>
   );

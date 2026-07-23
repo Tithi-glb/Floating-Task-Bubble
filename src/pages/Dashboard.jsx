@@ -6,17 +6,17 @@ import Sidebar from "../components/layout/Sidebar";
 import { NotificationProvider } from "../context/NotificationContext";
 import PreviewPanel from "../components/layout/PreviewPanel";
 import SettingsPanel from "../components/layout/SettingsPanel";
-import AddTaskModal from "../components/modals/AddTaskModal";
+import { AddTaskModal } from "../components/quick-add";
 import ProgressTracker from "../components/layout/ProgressTracker";
 import FloatingDock from "../components/FloatingDock";
 import { ToastContainer } from "../components/Toast";
 import ConfirmDeleteModal from "../components/modals/ConfirmDeleteModal";
-import FloatingTaskListBubble from "../components/FloatingTaskListBubble";
+import { FloatingTaskListBubble } from "../components/bubbles";
 import WhatsNewModal from "../components/modals/WhatsNewModal";
 import FeaturesModal from "../components/modals/FeaturesModal";
 
-import { loadTasks, saveTasks } from "../utils/taskStorage";
 import { syncTodaySnapshot } from "../utils/progressStorage";
+import { taskAPI } from "../services/api";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -88,7 +88,23 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
     email: "guest@bubblespace.io",
   }, [propUserProfile, fallbackUserProfile]);
 
-  const [tasks, setTasks] = useState(() => loadTasks(userProfile));
+  const [tasks, setTasks] = useState([]);
+
+  // Load tasks from API on mount or user changes
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (userProfile && userProfile.email !== "guest@bubblespace.io") {
+        try {
+          const fetchedTasks = await taskAPI.getTasks();
+          setTasks(fetchedTasks);
+        } catch (err) {
+          console.error("Failed to load tasks:", err);
+          addToast("Failed to load tasks from server.", "error");
+        }
+      }
+    };
+    fetchTasks();
+  }, [userProfile]);
 
   const [settings, setSettings] = useState(() => {
     try {
@@ -128,8 +144,7 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
     }
   };
 
-  // Persist tasks
-  useEffect(() => { saveTasks(tasks, userProfile); }, [tasks, userProfile]);
+  // Tasks are persisted on CRUD operations via API calls
 
 
 
@@ -181,70 +196,123 @@ function Dashboard({ userProfile: propUserProfile, onLogout }) {
 
   // ─── Task CRUD ──────────────────────────────────────────────────────────────
 
-  const addTask = (newTask) => {
-    const createdTask = {
-      id: generateId(),
+  const addTask = async (newTask) => {
+    const taskData = {
       completed: false,
       isFocused: newTask.isFocused || false,
       subtasks: [],
       priority: newTask.priority || settings.defaultPriority,
       ...newTask,
     };
-    setTasks((prev) => [
-      ...prev,
-      createdTask,
-    ]);
-    setIsModalOpen(false);
-    setEditingTask(null);
-    localStorage.removeItem("ftb_task_draft");
+    try {
+      const createdTask = await taskAPI.createTask(taskData);
+      setTasks((prev) => [...prev, createdTask]);
+      setIsModalOpen(false);
+      setEditingTask(null);
+      localStorage.removeItem("ftb_task_draft");
 
-    addToast(`Task "${createdTask.title}" created.`, "success", {
-      label: "Edit",
-      onClick: () => handleEdit(createdTask),
-    });
-  };
-
-  const updateTask = (updatedTask) => {
-    setTasks((prev) => prev.map((t) => (t.id === editingTask.id ? { ...t, ...updatedTask } : t)));
-    setIsModalOpen(false);
-    setEditingTask(null);
-    localStorage.removeItem("ftb_task_draft");
-
-    addToast(`Task "${updatedTask.title}" updated.`, "info");
-  };
-
-  // Inline update from bubble toolbar (partial patch by id)
-  const updateTaskById = (taskId, patch) => {
-    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, ...patch } : t)));
-  };
-
-  const deleteTask = (taskId) => {
-    const deleted = tasks.find((t) => t.id === taskId);
-    setTasks((prev) => prev.filter((t) => t.id !== taskId));
-    if (deleted) {
-      addToast(`Task "${deleted.title}" deleted.`, "warning");
+      addToast(`Task "${createdTask.title}" created.`, "success", {
+        label: "Edit",
+        onClick: () => handleEdit(createdTask),
+      });
+    } catch (err) {
+      console.error("Error creating task:", err);
+      addToast("Failed to create task on server.", "error");
     }
   };
 
-  const toggleTaskCompletion = (taskId) => {
-    const today = new Date().toISOString().split("T")[0];
-    const nowTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId
-          ? {
-            ...t,
-            completed: !t.completed,
-            completedDate: !t.completed ? today : undefined,
-            completedTime: !t.completed ? nowTime : undefined,
-          }
-          : t
-      )
-    );
+  const updateTask = async (updatedTask) => {
+    if (!editingTask) return;
+    try {
+      const savedTask = await taskAPI.updateTask(editingTask.id, updatedTask);
+      setTasks((prev) => prev.map((t) => (t.id === editingTask.id ? savedTask : t)));
+      setIsModalOpen(false);
+      setEditingTask(null);
+      localStorage.removeItem("ftb_task_draft");
+
+      addToast(`Task "${savedTask.title}" updated.`, "info");
+    } catch (err) {
+      console.error("Error updating task:", err);
+      addToast("Failed to update task on server.", "error");
+    }
   };
 
-  const toggleFocus = (taskId) => {
-    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, isFocused: !t.isFocused } : t)));
+  // Inline update from bubble toolbar (partial patch by id)
+  const updateTaskById = async (taskId, patch) => {
+    try {
+      // Optimistic update
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, ...patch } : t)));
+      await taskAPI.updateTask(taskId, patch);
+    } catch (err) {
+      console.error("Error updating task:", err);
+      addToast("Failed to update task.", "error");
+      const fetchedTasks = await taskAPI.getTasks();
+      setTasks(fetchedTasks);
+    }
+  };
+
+  const deleteTask = async (taskId) => {
+    const deleted = tasks.find((t) => t.id === taskId);
+    try {
+      await taskAPI.deleteTask(taskId);
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+      if (deleted) {
+        addToast(`Task "${deleted.title}" deleted.`, "warning");
+      }
+    } catch (err) {
+      console.error("Error deleting task:", err);
+      addToast("Failed to delete task.", "error");
+    }
+  };
+
+  const toggleTaskCompletion = async (taskId) => {
+    const today = new Date().toISOString().split("T")[0];
+    const nowTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const targetTask = tasks.find((t) => t.id === taskId);
+    if (!targetTask) return;
+
+    const completed = !targetTask.completed;
+    const completedDate = completed ? today : undefined;
+    const completedTime = completed ? nowTime : undefined;
+
+    try {
+      // Optimistic update
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? { ...t, completed, completedDate, completedTime }
+            : t
+        )
+      );
+      await taskAPI.updateTask(taskId, {
+        completed,
+        completedDate: completed ? today : "",
+        completedTime: completed ? nowTime : "",
+      });
+    } catch (err) {
+      console.error("Error toggling completion:", err);
+      addToast("Failed to update completion.", "error");
+      const fetchedTasks = await taskAPI.getTasks();
+      setTasks(fetchedTasks);
+    }
+  };
+
+  const toggleFocus = async (taskId) => {
+    const targetTask = tasks.find((t) => t.id === taskId);
+    if (!targetTask) return;
+
+    const isFocused = !targetTask.isFocused;
+
+    try {
+      // Optimistic update
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, isFocused } : t)));
+      await taskAPI.updateTask(taskId, { isFocused });
+    } catch (err) {
+      console.error("Error toggling focus:", err);
+      addToast("Failed to update focus.", "error");
+      const fetchedTasks = await taskAPI.getTasks();
+      setTasks(fetchedTasks);
+    }
   };
 
   const handleEdit = (task) => {

@@ -3,9 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import DockIcon from "./DockIcon";
 import CalendarPanel from "./CalendarPanel";
 import ProgressPanel from "./ProgressPanel";
-import PendingTasksPanel from "./PendingTasksPanel";
-import CompletedTasksPanel from "./CompletedTasksPanel";
-import QuickAddTaskPanel from "./QuickAddTaskPanel";
+import { PendingTasksPanel, CompletedTasksPanel } from "./task-list";
+import { QuickAddTaskPanel } from "./quick-add";
 
 const DOCK_ITEMS = [
   { key: "calendar",   icon: "📅", label: "Calendar" },

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BrowserRouter, Navigate, Routes, Route, useLocation } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import BubblePage from "./pages/BubblePage";
 import { getStoredUserSession, login, logoutUser, register } from "./utils/auth";
 
 function ProtectedRoute({ userProfile, onLogout, children }) {
@@ -17,8 +18,8 @@ function ProtectedRoute({ userProfile, onLogout, children }) {
 function App() {
   const [userProfile, setUserProfile] = useState(() => getStoredUserSession());
 
-  const handleLogin = (email, password) => {
-    const res = login(email, password);
+  const handleLogin = async (email, password) => {
+    const res = await login(email, password);
     if (res.success) {
       setUserProfile(res.user);
       return { success: true };
@@ -26,8 +27,8 @@ function App() {
     return { success: false, error: res.error };
   };
 
-  const handleRegister = (name, email, password) => {
-    return register(name, email, password);
+  const handleRegister = async (name, email, password) => {
+    return await register(name, email, password);
   };
 
   const handleLogout = () => {
@@ -38,6 +39,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/bubble/:id" element={<BubblePage />} />
         <Route
           path="/"
           element={<Login onLogin={handleLogin} onRegister={handleRegister} />}

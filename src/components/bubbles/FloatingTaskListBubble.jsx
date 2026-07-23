@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
-import Tooltip from "./Tooltip";
+import Tooltip from "../Tooltip";
 
 export default function FloatingTaskListBubble({ tasks, onEdit, theme }) {
   const [isOpen, setIsOpen] = useState(false);
